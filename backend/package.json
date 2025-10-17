@@ -33,6 +33,9 @@
     "typescript-eslint": "^8.46.1"
   },
   "dependencies": {
+    "@chroma-core/default-embed": "^0.1.5",
+    "@chroma-core/openai": "^0.1.5",
+    "chromadb": "^3.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
