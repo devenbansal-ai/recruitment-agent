@@ -1,8 +1,7 @@
 import OpenAI from "openai";
 import { LLMProvider, LLMResponse, StreamHandler } from "./provider.types.js";
-import dotenv from "dotenv";
 
-dotenv.config();
+console.log("here");
 
 export class OpenAIProvider implements LLMProvider {
   name = "openai";

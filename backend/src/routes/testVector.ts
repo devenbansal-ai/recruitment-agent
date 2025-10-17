@@ -1,11 +1,9 @@
 import express from "express";
-import { getVectorProvider } from "../vector";
+import { vector } from "../vector";
 
 const router = express.Router();
 
 router.post("/test-vector", async (req, res) => {
-  const vector = getVectorProvider("chroma");
-  console.log("vector: ", vector);
   await vector.upsert([
     { id: "1", text: "JavaScript developer with frontend skills", metadata: { role: "frontend" } },
     { id: "2", text: "Python engineer experienced in backend APIs", metadata: { role: "backend" } },

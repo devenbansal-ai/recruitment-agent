@@ -19,8 +19,8 @@ export class ChromaVectorProvider implements VectorProvider {
       modelName: "text-embedding-3-small",
     });
 
-    this.collection = await this.client.createCollection({
-      name: "my_collection",
+    this.collection = await this.client.getOrCreateCollection({
+      name: "my_collection_1",
       embeddingFunction: embeddingFn,
     });
   }
@@ -32,7 +32,7 @@ export class ChromaVectorProvider implements VectorProvider {
     await this.collection.add({
       ids: items.map((i) => i.id),
       documents: items.map((i) => i.text),
-      metadatas: items.map((i) => i.metadata || {}),
+      metadatas: items.map((i) => i.metadata),
     });
     Logger.log(LOGGER_TAGS.UPSERT_ITEM_END);
   }

@@ -1,5 +1,6 @@
+require("@dotenvx/dotenvx").config();
+
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/auth";
 import candidateRoutes from "./routes/candidate";
@@ -7,8 +8,11 @@ import jobRoutes from "./routes/job";
 import testLLMStreamRoutes from "./routes/testLLMStream";
 import testLLMRoutes from "./routes/testLLM";
 import testVectorRoutes from "./routes/testVector";
+import Logger from "./utils/logger";
+import { LOGGER_TAGS } from "./utils/tags";
 
-dotenv.config();
+Logger.log(LOGGER_TAGS.STARTING_BACKEND);
+
 const app = express();
 app.use(cors());
 app.use(express.json());
