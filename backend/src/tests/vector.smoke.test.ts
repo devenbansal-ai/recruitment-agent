@@ -1,4 +1,4 @@
-import { vector } from "../src/vector";
+import { vector } from "../vector";
 
 (async () => {
   try {

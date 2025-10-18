@@ -17,4 +17,7 @@ export interface LLMProvider {
 
   // Streaming completion
   stream(prompt: string, handler: StreamHandler, options?: Record<string, any>): Promise<void>;
+
+  // Create embedding
+  createEmbedding(input: string, options?: Record<string, any>): Promise<number[]>;
 }

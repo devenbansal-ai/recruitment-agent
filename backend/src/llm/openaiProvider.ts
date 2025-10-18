@@ -50,4 +50,13 @@ export class OpenAIProvider implements LLMProvider {
       if (handler.onError) handler.onError(err as Error);
     }
   }
+
+  async createEmbedding(input: string, options?: { model?: string }): Promise<number[]> {
+    const model = options?.model ?? "text-embedding-3-small";
+    const res = await this.client.embeddings.create({
+      model,
+      input,
+    });
+    return res.data[0].embedding;
+  }
 }

@@ -1,4 +1,4 @@
-import { llm } from "../src/llm";
+import { llm } from "../llm";
 
 (async () => {
   try {

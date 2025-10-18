@@ -8,6 +8,7 @@ import jobRoutes from "./routes/job";
 import testLLMStreamRoutes from "./routes/testLLMStream";
 import testLLMRoutes from "./routes/testLLM";
 import testVectorRoutes from "./routes/testVector";
+import ingestRoutes from "./routes/ingest";
 import Logger from "./utils/logger";
 import { LOGGER_TAGS } from "./utils/tags";
 
@@ -23,6 +24,7 @@ app.use("/api/job", jobRoutes);
 app.use("/api", testLLMStreamRoutes);
 app.use("/api", testLLMRoutes);
 app.use("/api", testVectorRoutes);
+app.use("/api/ingest", ingestRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
