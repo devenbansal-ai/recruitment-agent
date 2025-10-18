@@ -1,6 +1,7 @@
 require("@dotenvx/dotenvx").config();
 
 import express from "express";
+import path from "path";
 import cors from "cors";
 import authRoutes from "./routes/auth";
 import candidateRoutes from "./routes/candidate";
@@ -9,6 +10,7 @@ import testLLMStreamRoutes from "./routes/testLLMStream";
 import testLLMRoutes from "./routes/testLLM";
 import testVectorRoutes from "./routes/testVector";
 import ingestRoutes from "./routes/ingest";
+import agentRoutes from "./routes/agent";
 import Logger from "./utils/logger";
 import { LOGGER_TAGS } from "./utils/tags";
 
@@ -25,6 +27,8 @@ app.use("/api", testLLMStreamRoutes);
 app.use("/api", testLLMRoutes);
 app.use("/api", testVectorRoutes);
 app.use("/api/ingest", ingestRoutes);
+app.use("/api/agent", agentRoutes);
+app.use("/traces", express.static(path.resolve(process.cwd(), "traces")));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));

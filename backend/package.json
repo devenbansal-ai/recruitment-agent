@@ -20,6 +20,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.8.1",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1",
     "eslint": "^9.37.0",
@@ -44,6 +45,7 @@
     "jsonwebtoken": "^9.0.2",
     "marked": "^16.4.1",
     "multer": "^2.0.2",
-    "pdf-parse": "^2.4.3"
+    "pdf-parse": "^2.4.3",
+    "uuid": "^13.0.0"
   }
 }
