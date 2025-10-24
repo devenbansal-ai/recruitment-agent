@@ -8,11 +8,8 @@ router.post("/test-vector", async (req, res) => {
     { id: "1", text: "JavaScript developer with frontend skills", metadata: { role: "frontend" } },
     { id: "2", text: "Python engineer experienced in backend APIs", metadata: { role: "backend" } },
   ]);
-  console.log("here 1");
 
   const results = await vector.query("looking for backend engineer");
-  console.log("here 2");
-  console.log("results: ", results);
   res.json(results);
 });
 

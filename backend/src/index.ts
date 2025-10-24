@@ -11,6 +11,7 @@ import testLLMRoutes from "./routes/testLLM";
 import testVectorRoutes from "./routes/testVector";
 import ingestRoutes from "./routes/ingest";
 import agentRoutes from "./routes/agent";
+import googleAuthRoutes from "./routes/googleAuth";
 import Logger from "./utils/logger";
 import { LOGGER_TAGS } from "./utils/tags";
 
@@ -28,6 +29,7 @@ app.use("/api", testLLMRoutes);
 app.use("/api", testVectorRoutes);
 app.use("/api/ingest", ingestRoutes);
 app.use("/api/agent", agentRoutes);
+app.use("/api", googleAuthRoutes);
 app.use("/traces", express.static(path.resolve(process.cwd(), "traces")));
 
 const PORT = process.env.PORT || 4000;

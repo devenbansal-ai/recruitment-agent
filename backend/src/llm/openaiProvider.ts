@@ -1,8 +1,6 @@
 import OpenAI from "openai";
 import { LLMProvider, LLMResponse, StreamHandler } from "./provider.types.js";
 
-console.log("here");
-
 export class OpenAIProvider implements LLMProvider {
   name = "openai";
   private client: OpenAI;
