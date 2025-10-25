@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
+console.log("OpenAI Key prefix:", process.env.OPENAI_API_KEY?.slice(0, 4));
 
 import express from "express";
 import path from "path";
@@ -35,5 +36,5 @@ app.use("/api/agent", agentRoutes);
 app.use("/api", googleAuthRoutes);
 app.use("/traces", express.static(path.resolve(process.cwd(), "traces")));
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
