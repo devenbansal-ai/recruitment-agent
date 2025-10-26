@@ -1,27 +1,32 @@
 import express from "express";
-import multer from "multer";
-import { extractText } from "../utils/file";
-import { chunkText } from "../embed/chunker";
+import { chunkTextWithMetadata } from "../embed/chunker";
 import { vector } from "../vector";
 
-const upload = multer({ dest: "uploads/" });
 const router = express.Router();
 
-router.post("/", upload.single("file"), async (req, res) => {
-  const file = req.file;
-  if (!file) return res.status(400).send("No file uploaded");
+router.post("/ingest", async (req, res) => {
+  try {
+    const { text, source, pageNumber }: { text?: string; source?: string; pageNumber?: number } =
+      req.body;
 
-  const text = await extractText(file.path, file.mimetype);
-  const chunks = chunkText(text);
+    if (!text || !source) {
+      return res.status(400).json({ error: "Missing text or source" });
+    }
 
-  const vectors = chunks.map((e, i) => ({
-    id: `${file.filename}_${i}`,
-    text: e,
-    metadata: { source: file.originalname, index: i },
-  }));
+    const chunks = await chunkTextWithMetadata(text, source, pageNumber);
 
-  await vector.upsert(vectors);
-  res.json({ status: "ok", chunks: chunks.length });
+    const vectors = chunks.map((e, i) => ({
+      id: e.id,
+      text: e.content,
+      metadata: e.metadata,
+    }));
+
+    await vector.upsert(vectors);
+    res.json({ success: true, chunksIngested: chunks.length });
+  } catch (err) {
+    console.error("Ingestion error:", err);
+    res.status(500).json({ error: "Failed to ingest document" });
+  }
 });
 
 export default router;

@@ -31,7 +31,7 @@ app.use("/api/job", jobRoutes);
 app.use("/api", testLLMStreamRoutes);
 app.use("/api", testLLMRoutes);
 app.use("/api", testVectorRoutes);
-app.use("/api/ingest", ingestRoutes);
+app.use("/api", ingestRoutes);
 app.use("/api/agent", agentRoutes);
 app.use("/api", googleAuthRoutes);
 app.use("/traces", express.static(path.resolve(process.cwd(), "traces")));

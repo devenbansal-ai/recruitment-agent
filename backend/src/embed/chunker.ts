@@ -1,16 +1,30 @@
-export function chunkText(text: string, chunkSize = 500, overlap = 50) {
-  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-  const chunks: string[] = [];
-  let current = "";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
-  for (const sentence of sentences) {
-    if ((current + sentence).length > chunkSize) {
-      chunks.push(current.trim());
-      current = sentence.slice(-overlap);
-    } else {
-      current += sentence;
-    }
-  }
-  if (current) chunks.push(current.trim());
-  return chunks;
+export async function chunkTextWithMetadata(text: string, source: string, pageNumber?: number) {
+  const splitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 800, // characters (adjust as needed)
+    chunkOverlap: 100, // ensures continuity
+    separators: ["\n\n", ".", "!", "?", ";", ","],
+  });
+
+  const chunks = await splitter.createDocuments(
+    [text],
+    [
+      {
+        source,
+        page_number: pageNumber ?? null,
+      },
+    ]
+  );
+
+  return chunks.map((chunk, index) => ({
+    id: `${source}-${pageNumber ?? 0}-${index}`,
+    content: chunk.pageContent,
+    metadata: {
+      source,
+      pageNumber,
+      chunkIndex: index,
+      length: chunk.pageContent.length,
+    },
+  }));
 }
