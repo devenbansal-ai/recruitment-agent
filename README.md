@@ -59,6 +59,11 @@ npm run dev
 
 → starts at `http://localhost:{PORT}`
 
+#### Test APIs:
+
+_(Assuming PORT = 8080)_
+See available pinecone indexes: http://localhost:8080/api/pinecone-indexes
+
 ### 5️⃣ Run Tests
 
 ```bash

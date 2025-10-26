@@ -1,8 +1,10 @@
 import { ChromaVectorProvider } from "./chromaClient";
+import { PineconeVectorProvider } from "./pineconeClient";
 import { VectorProvider } from "./provider.types";
 
 const providers: Record<string, VectorProvider> = {
   chroma: new ChromaVectorProvider(),
+  pinecone: new PineconeVectorProvider(),
 };
 
 const getVectorProvider = (name: string): VectorProvider => {

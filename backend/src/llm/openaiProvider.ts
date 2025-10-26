@@ -1,5 +1,6 @@
 import OpenAI from "openai";
-import { LLMProvider, LLMResponse, StreamHandler } from "./provider.types.js";
+import { LLMProvider, LLMResponse, StreamHandler } from "./provider.types";
+import { ChatCompletionMessageParam } from "openai/resources/index";
 
 export class OpenAIProvider implements LLMProvider {
   name = "openai";
@@ -11,12 +12,15 @@ export class OpenAIProvider implements LLMProvider {
     });
   }
 
-  async generate(prompt: string, options?: { model?: string }): Promise<LLMResponse> {
+  async generate(
+    prompt: string,
+    options?: { messages: ChatCompletionMessageParam[]; model?: string }
+  ): Promise<LLMResponse> {
     const model = options?.model || "gpt-4o-mini";
 
     const response = await this.client.chat.completions.create({
       model,
-      messages: [{ role: "user", content: prompt }],
+      messages: [...(options?.messages ?? []), { role: "user", content: prompt }],
     });
 
     const text = response.choices[0]?.message?.content || "";

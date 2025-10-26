@@ -1,6 +1,11 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { Chunk } from "../types/vector";
 
-export async function chunkTextWithMetadata(text: string, source: string, pageNumber?: number) {
+export async function chunkTextWithMetadata(
+  text: string,
+  source: string,
+  pageNumber?: number
+): Promise<Chunk[]> {
   const splitter = new RecursiveCharacterTextSplitter({
     chunkSize: 800, // characters (adjust as needed)
     chunkOverlap: 100, // ensures continuity
@@ -12,7 +17,7 @@ export async function chunkTextWithMetadata(text: string, source: string, pageNu
     [
       {
         source,
-        page_number: pageNumber ?? null,
+        page_number: pageNumber ?? 0,
       },
     ]
   );
@@ -22,7 +27,7 @@ export async function chunkTextWithMetadata(text: string, source: string, pageNu
     content: chunk.pageContent,
     metadata: {
       source,
-      pageNumber,
+      pageNumber: pageNumber ?? 0,
       chunkIndex: index,
       length: chunk.pageContent.length,
     },

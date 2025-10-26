@@ -1,6 +1,6 @@
 import { ChromaClient } from "chromadb";
 import { OpenAIEmbeddingFunction } from "@chroma-core/openai";
-import { VectorProvider, VectorItem, VectorResult } from "./provider.types.js";
+import { VectorProvider, VectorItem, VectorResult } from "./provider.types";
 import Logger from "../utils/logger";
 import { LOGGER_TAGS } from "../utils/tags";
 

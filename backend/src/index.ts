@@ -15,6 +15,8 @@ import testLLMRoutes from "./routes/testLLM";
 import testVectorRoutes from "./routes/testVector";
 import ingestRoutes from "./routes/ingest";
 import agentRoutes from "./routes/agent";
+import vectorRoutes from "./routes/vector";
+import ragRoutes from "./routes/rag";
 import googleAuthRoutes from "./routes/googleAuth";
 import Logger from "./utils/logger";
 import { LOGGER_TAGS } from "./utils/tags";
@@ -34,6 +36,8 @@ app.use("/api", testVectorRoutes);
 app.use("/api", ingestRoutes);
 app.use("/api/agent", agentRoutes);
 app.use("/api", googleAuthRoutes);
+app.use("/api", ragRoutes);
+app.use("/api", vectorRoutes);
 app.use("/traces", express.static(path.resolve(process.cwd(), "traces")));
 
 const PORT = process.env.PORT || 8080;
