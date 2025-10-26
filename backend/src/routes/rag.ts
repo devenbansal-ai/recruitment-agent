@@ -9,7 +9,7 @@ import { LOGGER_TAGS } from "../utils/tags";
 
 const router = express.Router();
 
-router.post("/rag", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { query } = req.body;
     const cacheKey = `rag:${query}`;

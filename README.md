@@ -63,6 +63,9 @@ npm run dev
 
 _(Assuming PORT = 8080)_
 See available pinecone indexes: http://localhost:8080/api/pinecone-indexes
+Call web search api: http://localhost:8080/api/web-search
+Generate google auth code: http://localhost:8080/api/google-auth/generate-code
+List all calendar events: http://localhost:8080/api/calendar/events
 
 ### 5️⃣ Run Tests
 

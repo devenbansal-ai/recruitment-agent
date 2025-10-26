@@ -18,6 +18,8 @@ import agentRoutes from "./routes/agent";
 import vectorRoutes from "./routes/vector";
 import ragRoutes from "./routes/rag";
 import googleAuthRoutes from "./routes/googleAuth";
+import webSearchRoutes from "./routes/webSearch";
+import calendarRoutes from "./routes/calendar";
 import Logger from "./utils/logger";
 import { LOGGER_TAGS } from "./utils/tags";
 import { logRequestCost } from "./utils/requestLogger";
@@ -32,14 +34,18 @@ app.use(logRequestCost);
 app.use("/api/auth", authRoutes);
 app.use("/api/candidate", candidateRoutes);
 app.use("/api/job", jobRoutes);
+app.use("/api/ingest", ingestRoutes);
+app.use("/api/agent", agentRoutes);
+app.use("/api/google-auth", googleAuthRoutes);
+app.use("/api/rag", ragRoutes);
+app.use("/api/vector", vectorRoutes);
+app.use("/api/web-search", webSearchRoutes);
+app.use("/api/calendar", calendarRoutes);
+
 app.use("/api", testLLMStreamRoutes);
 app.use("/api", testLLMRoutes);
 app.use("/api", testVectorRoutes);
-app.use("/api", ingestRoutes);
-app.use("/api/agent", agentRoutes);
-app.use("/api", googleAuthRoutes);
-app.use("/api", ragRoutes);
-app.use("/api", vectorRoutes);
+
 app.use("/traces", express.static(path.resolve(process.cwd(), "traces")));
 
 const PORT = process.env.PORT || 8080;

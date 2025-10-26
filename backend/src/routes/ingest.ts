@@ -4,7 +4,7 @@ import { vector } from "../vector";
 
 const router = express.Router();
 
-router.post("/ingest", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { text, source, pageNumber }: { text?: string; source?: string; pageNumber?: number } =
       req.body;

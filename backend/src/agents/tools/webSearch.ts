@@ -1,10 +1,13 @@
 import { getJson } from "serpapi";
+import Logger from "../../utils/logger";
+import { LOGGER_TAGS } from "../../utils/tags";
 
-const apiKey = process.env.SERPAPI_API_KEY!;
+const apiKey = process.env.SERPAPI_KEY!;
 
-export async function search({ q }: { q: string }) {
+export async function webSearch(query: string) {
+  Logger.log(LOGGER_TAGS.WEB_SEARCH_QUERY, query);
   const params = {
-    q,
+    q: query,
     engine: "google", // or whichever engine you choose
     hl: "en",
     gl: "us",
@@ -22,6 +25,7 @@ export async function search({ q }: { q: string }) {
           api_key: apiKey,
         },
         (json) => {
+          Logger.log(LOGGER_TAGS.WEB_SEARCH_SUCCESSFUL);
           resolve(json);
         }
       );
@@ -29,7 +33,7 @@ export async function search({ q }: { q: string }) {
 
     // You can transform data into your action-output format
     return {
-      query: q,
+      query,
       results:
         data["organic_results"].map((r: any) => ({
           title: r.title,
@@ -38,6 +42,7 @@ export async function search({ q }: { q: string }) {
         })) ?? [],
     };
   } catch (err) {
+    Logger.log(LOGGER_TAGS.WEB_SEARCH_UNSUCCESSFUL);
     throw new Error(`WebSearch failed: ${String(err)}`);
   }
 }
