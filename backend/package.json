@@ -55,6 +55,7 @@
     "langchain": "^1.0.1",
     "marked": "^16.4.1",
     "multer": "^2.0.2",
+    "node-cache": "^5.1.2",
     "pdf-parse": "^2.4.3",
     "serpapi": "^2.2.1",
     "uuid": "^13.0.0"

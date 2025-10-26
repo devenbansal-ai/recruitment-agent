@@ -20,12 +20,14 @@ import ragRoutes from "./routes/rag";
 import googleAuthRoutes from "./routes/googleAuth";
 import Logger from "./utils/logger";
 import { LOGGER_TAGS } from "./utils/tags";
+import { logRequestCost } from "./utils/requestLogger";
 
 Logger.log(LOGGER_TAGS.STARTING_BACKEND);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(logRequestCost);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/candidate", candidateRoutes);
