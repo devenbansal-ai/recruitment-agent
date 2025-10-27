@@ -1,4 +1,4 @@
-import { VectorProvider, VectorItem, VectorResult } from "./provider.types";
+import { VectorProvider, VectorItem, VectorResult, QueryParams } from "./provider.types";
 import Logger from "../utils/logger";
 import { LOGGER_TAGS } from "../utils/tags";
 import { Index, PineconeRecord, RecordMetadata } from "@pinecone-database/pinecone";
@@ -32,15 +32,15 @@ export class PineconeVectorProvider implements VectorProvider {
     Logger.log(LOGGER_TAGS.UPSERT_ITEM_END);
   }
 
-  async query(text: string, limit = 3): Promise<VectorResult[]> {
+  async query(params: QueryParams): Promise<VectorResult[]> {
     // 1️⃣ Embed query
-    const embedding = await llm.createEmbedding(text);
+    const embedding = await llm.createEmbedding(params.query);
 
     // 2️⃣ Query Pinecone
     const results = await this.index.query({
       vector: embedding,
-      topK: limit,
-      includeMetadata: true,
+      topK: params.topK ?? 3,
+      includeMetadata: params.includeMetadata ?? false,
     });
 
     Logger.log(LOGGER_TAGS.PINECONE_QUERY_MATCHES, results.matches);

@@ -1,6 +1,6 @@
 import { ChromaClient } from "chromadb";
 import { OpenAIEmbeddingFunction } from "@chroma-core/openai";
-import { VectorProvider, VectorItem, VectorResult } from "./provider.types";
+import { VectorProvider, VectorItem, VectorResult, QueryParams } from "./provider.types";
 import Logger from "../utils/logger";
 import { LOGGER_TAGS } from "../utils/tags";
 
@@ -37,12 +37,12 @@ export class ChromaVectorProvider implements VectorProvider {
     Logger.log(LOGGER_TAGS.UPSERT_ITEM_END);
   }
 
-  async query(text: string, limit = 3): Promise<VectorResult[]> {
+  async query(params: QueryParams): Promise<VectorResult[]> {
     if (!this.collection) await this.init();
 
     const result = await this.collection.query({
-      queryTexts: [text],
-      nResults: limit,
+      queryTexts: [params.query],
+      nResults: params.topK,
     });
 
     return (result.ids[0] || []).map((id: string, idx: number) => ({

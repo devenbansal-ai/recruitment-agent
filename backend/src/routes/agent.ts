@@ -13,37 +13,51 @@ router.post("/", async (req, res) => {
   const requestId = uuidv4();
   const trace = startTrace(requestId, prompt);
 
-  const actions = plan(prompt);
+  try {
+    const actions = plan(prompt);
+    let finalOutcome: string | undefined;
 
-  let stepCounter = 0;
-  for (const action of actions) {
-    stepCounter++;
-    const step = {
-      step: stepCounter,
-      timestamp: new Date().toISOString(),
-      action,
-      note: "Planned action",
-    };
-    appendStep(trace, step);
+    let stepCounter = 0;
+    for (const action of actions) {
+      stepCounter++;
+      const step = {
+        step: stepCounter,
+        timestamp: new Date().toISOString(),
+        action,
+        note: "Planned action",
+      };
+      appendStep(trace, step);
 
-    const result = await executeAction(action);
-    const stepResult = {
-      step: stepCounter,
-      timestamp: new Date().toISOString(),
-      action,
-      result,
-    };
-    appendStep(trace, stepResult);
+      const result = await executeAction(action);
+      const stepResult = {
+        step: stepCounter,
+        timestamp: new Date().toISOString(),
+        action,
+        result,
+      };
+      appendStep(trace, stepResult);
 
-    // basic stop-if-success policy; modify as needed
-    if (result.success && action.tool === "vector_search") {
-      trace.outcome = "found_relevant_docs";
-      break;
+      // basic stop-if-success policy; modify as needed
+      if (result.success && action.tool === "vector_search") {
+        finalOutcome = "found_relevant_docs";
+        break;
+      }
     }
-  }
 
-  endAndPersistTrace(trace);
-  return res.json({ requestId, traceFile: `/traces/${requestId}.json` });
+    trace.outcome = finalOutcome ?? "completed";
+    endAndPersistTrace(trace);
+
+    return res.json({ requestId, traceFile: `/traces/${requestId}.json` });
+  } catch (err) {
+    appendStep(trace, {
+      step: -1,
+      timestamp: new Date().toISOString(),
+      note: "fatal_error",
+      result: { success: false, error: String(err) },
+    });
+    endAndPersistTrace(trace);
+    return res.status(500).json({ error: String(err) });
+  }
 });
 
 export default router;

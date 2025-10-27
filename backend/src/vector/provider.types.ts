@@ -11,8 +11,15 @@ export interface VectorResult {
   metadata?: Record<string, any>;
 }
 
+export interface QueryParams {
+  query: string;
+  topK?: number;
+  includeMetadata?: boolean;
+  filter?: Record<string, any>;
+}
+
 export interface VectorProvider {
   name: string;
   upsert(items: VectorItem[]): Promise<void>;
-  query(text: string, limit?: number): Promise<VectorResult[]>;
+  query(params: QueryParams): Promise<VectorResult[]>;
 }

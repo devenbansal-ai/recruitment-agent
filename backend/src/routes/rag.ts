@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
     }
 
     // Query Pinecone
-    const results = await vector.query(query, 5);
+    const results = await vector.query({ query, topK: 5 });
 
     const context = results.map((m: VectorResult) => m.text).join("\n");
 

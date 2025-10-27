@@ -6,15 +6,20 @@ import { ToolAction, ToolResult } from "../types/agent";
  * Extend rules as needed.
  */
 export function validateAction(action: ToolAction): { ok: boolean; reason?: string } {
-  // disallow any action that attempts modification without explicit allow flag
-  if (action.tool.startsWith("calendar") && action.tool.endsWith("write")) {
-    // require explicit confirmation in input
-    if (!action.input || !action.input.confirmed) {
-      return { ok: false, reason: "Destructive calendar write blocked (missing confirmed flag)" };
+  if (!action || !action.tool) return { ok: false, reason: "Bad action" };
+
+  // Block destructive calendar writes unless confirmed
+  if (action.tool === "calendar_write") {
+    if (!action.input?.confirmed) {
+      return { ok: false, reason: "calendar_write is blocked: missing confirmed flag" };
     }
   }
 
-  // For web_search and vector_search allow everything (read-only)
+  // Disallow unknown tools
+  if (!TOOL_REGISTRY[action.tool]) {
+    return { ok: false, reason: `Tool not found: ${action.tool}` };
+  }
+
   return { ok: true };
 }
 
@@ -27,6 +32,7 @@ export async function executeAction(action: ToolAction): Promise<ToolResult> {
 
   try {
     const output = await fn(action.input ?? {});
+    if (output?.success === true || output?.success === false) return output;
     return { success: true, output };
   } catch (err: any) {
     return { success: false, error: err?.message ?? String(err) };

@@ -14,12 +14,12 @@ export function plan(prompt: string): ToolAction[] {
   }
 
   if (p.includes("source") || p.includes("doc")) {
-    actions.push({ tool: "vector_search", input: { q: extractQuery(prompt), topK: 3 } });
+    actions.push({ tool: "vector_search", input: { query: extractQuery(prompt), topK: 3 } });
   }
 
   // Fallback: ask the vector DB first for context
   if (!actions.length) {
-    actions.push({ tool: "vector_search", input: { q: extractQuery(prompt), topK: 3 } });
+    actions.push({ tool: "vector_search", input: { query: extractQuery(prompt), topK: 3 } });
   }
 
   return actions;

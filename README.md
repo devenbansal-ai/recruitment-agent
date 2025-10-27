@@ -62,10 +62,14 @@ npm run dev
 #### Test APIs:
 
 _(Assuming PORT = 8080)_
-See available pinecone indexes: http://localhost:8080/api/pinecone-indexes
-Call web search api: http://localhost:8080/api/web-search
-Generate google auth code: http://localhost:8080/api/google-auth/generate-code
-List all calendar events: http://localhost:8080/api/calendar/events
+| Type | URL | Description | Parameters |
+|------|-----|-------------|------------|
+| GET | http://localhost:8080/api/pinecone-indexes | See available pinecone indexes |
+| GET | http://localhost:8080/api/web-search | Call web search api |
+| GET | http://localhost:8080/api/google-auth/generate-code | Generate google auth code |
+| GET | http://localhost:8080/api/calendar/events | List all calendar events |
+| POST | http://localhost:8080/api/agent | Call an agent | prompt |
+| GET | http://localhost:8080/api/agent/{request-id}/steps | Retreive Agent Logs |
 
 ### 5️⃣ Run Tests
 
