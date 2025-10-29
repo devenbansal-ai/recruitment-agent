@@ -3,7 +3,7 @@ import { vector } from "../vector";
 (async () => {
   try {
     await vector.upsert([{ id: "1", text: "test document" }]);
-    const result = await vector.query("test");
+    const result = await vector.query({ query: "test" });
     if (!Array.isArray(result)) throw new Error("No array returned");
     console.log("✅ Vector wrapper OK");
   } catch (err) {

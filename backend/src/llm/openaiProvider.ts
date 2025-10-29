@@ -1,6 +1,11 @@
 import OpenAI from "openai";
-import { LLMProvider, LLMResponse, StreamHandler, LLMUsage } from "./provider.types";
-import { ChatCompletionMessageParam } from "openai/resources/index";
+import {
+  LLMProvider,
+  LLMResponse,
+  StreamHandler,
+  LLMUsage,
+  LLMResponseOptions,
+} from "./provider.types";
 
 export class OpenAIProvider implements LLMProvider {
   name = "openai";
@@ -13,22 +18,22 @@ export class OpenAIProvider implements LLMProvider {
     });
   }
 
-  async generate(
-    prompt: string,
-    options?: { messages: ChatCompletionMessageParam[] }
-  ): Promise<LLMResponse> {
+  async generate(prompt: string, options?: LLMResponseOptions): Promise<LLMResponse> {
     const model = this.model;
-    const response = await this.client.chat.completions.create({
+    const response = await this.client.responses.create({
+      input: prompt,
       model,
-      messages: [...(options?.messages ?? []), { role: "user", content: prompt }],
+      instructions: options?.instructions,
+      text: options?.responseTextFormat,
+      temperature: options?.temperature,
     });
 
-    const text = response.choices[0]?.message?.content || "";
+    const text = response.output_text || "";
     let usage: LLMUsage | undefined;
-    if (response.usage?.completion_tokens && response.usage?.prompt_tokens) {
+    if (response.usage?.input_tokens && response.usage?.output_tokens) {
       usage = {
-        completion_tokens: response.usage?.completion_tokens,
-        prompt_tokens: response.usage?.prompt_tokens,
+        input_tokens: response.usage?.input_tokens,
+        output_tokens: response.usage?.output_tokens,
       } as LLMUsage;
     }
     return { text, usage };

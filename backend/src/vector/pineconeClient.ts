@@ -27,7 +27,7 @@ export class PineconeVectorProvider implements VectorProvider {
       });
     }
     await this.index.upsert(vectors);
-    console.log(`✅ Upserted ${vectors.length} vectors to Pinecone`);
+    Logger.log(`✅ Upserted ${vectors.length} vectors to Pinecone`);
 
     Logger.log(LOGGER_TAGS.UPSERT_ITEM_END);
   }

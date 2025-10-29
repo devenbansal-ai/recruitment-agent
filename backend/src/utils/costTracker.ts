@@ -14,7 +14,7 @@ export function estimateCost(model: string, usage: LLMUsage) {
   const rate = modelRates[model];
   if (!rate || !usage) return 0;
 
-  const inputCost = usage.prompt_tokens * rate.input;
-  const outputCost = usage.completion_tokens * rate.output;
+  const inputCost = usage.input_tokens * rate.input;
+  const outputCost = usage.output_tokens * rate.output;
   return inputCost + outputCost;
 }

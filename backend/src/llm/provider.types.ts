@@ -1,11 +1,13 @@
+import { ResponseTextConfig } from "openai/resources/responses/responses";
+
 export interface LLMResponse {
   text: string;
   usage?: LLMUsage;
 }
 
 export type LLMUsage = {
-  prompt_tokens: number;
-  completion_tokens: number;
+  input_tokens: number;
+  output_tokens: number;
 };
 
 export interface StreamHandler {
@@ -14,13 +16,19 @@ export interface StreamHandler {
   onError?: (err: Error) => void;
 }
 
+export type LLMResponseOptions = {
+  temperature?: number;
+  instructions?: string;
+  responseTextFormat?: ResponseTextConfig;
+};
+
 export interface LLMProvider {
   name: string;
 
   model: string;
 
   // One-shot completion
-  generate(prompt: string, options?: Record<string, any>): Promise<LLMResponse>;
+  generate(prompt: string, options?: LLMResponseOptions): Promise<LLMResponse>;
 
   // Streaming completion
   stream(prompt: string, handler: StreamHandler, options?: Record<string, any>): Promise<void>;

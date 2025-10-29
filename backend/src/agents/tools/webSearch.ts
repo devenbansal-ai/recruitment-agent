@@ -1,13 +1,18 @@
 import { getJson } from "serpapi";
 import Logger from "../../utils/logger";
 import { LOGGER_TAGS } from "../../utils/tags";
+import { Tool, ToolInput, ToolResult } from "../../types/agent";
 
 const apiKey = process.env.SERPAPI_KEY!;
 
-export async function webSearch(query: string) {
-  Logger.log(LOGGER_TAGS.WEB_SEARCH_QUERY, query);
+interface IWebSearchArgs extends ToolInput {
+  query: string;
+}
+
+async function webSearch(args: IWebSearchArgs): Promise<ToolResult> {
+  Logger.log(LOGGER_TAGS.WEB_SEARCH_QUERY, args.query);
   const params = {
-    q: query,
+    q: args.query,
     engine: "google", // or whichever engine you choose
     hl: "en",
     gl: "us",
@@ -33,8 +38,8 @@ export async function webSearch(query: string) {
 
     // You can transform data into your action-output format
     return {
-      query,
-      results:
+      success: true,
+      output:
         data["organic_results"].map((r: any) => ({
           title: r.title,
           link: r.link,
@@ -43,6 +48,18 @@ export async function webSearch(query: string) {
     };
   } catch (err) {
     Logger.log(LOGGER_TAGS.WEB_SEARCH_UNSUCCESSFUL);
-    throw new Error(`WebSearch failed: ${String(err)}`);
+    return {
+      success: false,
+      error: String(err),
+    };
   }
 }
+
+export const webSearchTool: Tool = {
+  name: "web_search",
+  description: "Searches the web for the given query and returns top matches",
+  argsSchema: {
+    query: { type: "string", description: "The query to search the web for.", required: true },
+  },
+  execute: webSearch,
+};

@@ -1,8 +1,9 @@
 import dotenv from "dotenv";
+import Logger from "./utils/logger";
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
-console.log("OpenAI Key prefix:", process.env.OPENAI_API_KEY?.slice(0, 4));
+Logger.log("OpenAI Key prefix:", process.env.OPENAI_API_KEY?.slice(0, 4));
 
 import express from "express";
 import path from "path";
@@ -21,7 +22,6 @@ import ragRoutes from "./routes/rag";
 import googleAuthRoutes from "./routes/googleAuth";
 import webSearchRoutes from "./routes/webSearch";
 import calendarRoutes from "./routes/calendar";
-import Logger from "./utils/logger";
 import { LOGGER_TAGS } from "./utils/tags";
 import { logRequestCost } from "./utils/requestLogger";
 

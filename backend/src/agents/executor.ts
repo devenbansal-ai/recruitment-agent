@@ -1,5 +1,5 @@
-import { TOOL_REGISTRY } from "./registry";
 import { ToolAction, ToolResult } from "../types/agent";
+import { toolRegistry } from "./registry";
 
 /**
  * Basic action validator to prevent destructive commands.
@@ -16,7 +16,7 @@ export function validateAction(action: ToolAction): { ok: boolean; reason?: stri
   }
 
   // Disallow unknown tools
-  if (!TOOL_REGISTRY[action.tool]) {
+  if (!toolRegistry.has(action.tool)) {
     return { ok: false, reason: `Tool not found: ${action.tool}` };
   }
 
@@ -27,11 +27,11 @@ export async function executeAction(action: ToolAction): Promise<ToolResult> {
   const validator = validateAction(action);
   if (!validator.ok) return { success: false, error: validator.reason };
 
-  const fn = TOOL_REGISTRY[action.tool];
+  const fn = toolRegistry.get(action.tool);
   if (!fn) return { success: false, error: `Tool not found: ${action.tool}` };
 
   try {
-    const output = await fn(action.input ?? {});
+    const output = await fn.execute(action.input ?? {});
     if (output?.success === true || output?.success === false) return output;
     return { success: true, output };
   } catch (err: any) {

@@ -1,8 +1,9 @@
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
-import { plan } from "../agents/planner";
+import { ruleBasedPlanner } from "../agents/planner";
 import { executeAction } from "../agents/executor";
-import { startTrace, appendStep, endAndPersistTrace } from "../agents/traceLogger";
+import { startTrace, appendStep, endAndPersistTrace } from "../utils/traceLogger";
+import { runAgent } from "../agents/orchestrator";
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.post("/", async (req, res) => {
   const trace = startTrace(requestId, prompt);
 
   try {
-    const actions = plan(prompt);
+    const actions = ruleBasedPlanner(prompt);
     let finalOutcome: string | undefined;
 
     let stepCounter = 0;
@@ -56,6 +57,18 @@ router.post("/", async (req, res) => {
       result: { success: false, error: String(err) },
     });
     endAndPersistTrace(trace);
+    return res.status(500).json({ error: String(err) });
+  }
+});
+
+router.post("/ask", async (req, res) => {
+  const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ error: "Missing prompt" });
+
+  try {
+    const response = await runAgent(prompt);
+    res.json(response);
+  } catch (err) {
     return res.status(500).json({ error: String(err) });
   }
 });

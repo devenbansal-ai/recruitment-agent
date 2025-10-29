@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
 
     // Generate answer using retrieved context
     const response = await llm.generate(prompt, {
-      messages: [{ role: "system", content: "You are a helpful RAG assistant." }],
+      instructions: "You are a helpful RAG assistant",
     });
 
     if (response.usage) {

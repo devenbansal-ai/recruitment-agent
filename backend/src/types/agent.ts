@@ -1,4 +1,14 @@
-export type ToolInput = { [k: string]: any };
+export type Tool = {
+  name: string;
+  description: string;
+  argsSchema: { [argName: string]: { type: string; description: string; required?: boolean } };
+  execute: (args: any) => Promise<ToolResult> | ToolResult;
+  additionalInfo?: () => string;
+};
+
+export interface ToolInput {
+  [k: string]: any;
+}
 
 export type ToolAction = {
   tool: string;
@@ -28,4 +38,9 @@ export type AgentTrace = {
   steps: AgentStep[];
   outcome?: string;
   meta?: Record<string, any>;
+};
+
+export type AgentResponse = {
+  output: string;
+  trace: any;
 };

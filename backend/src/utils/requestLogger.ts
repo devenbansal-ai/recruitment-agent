@@ -16,7 +16,7 @@ export function logRequestCost(req: Request, res: Response, next: any) {
       cached: res.locals.cached || false,
     };
 
-    Logger.log(LOGGER_TAGS.LOGGING_REQUEST);
+    Logger.log(LOGGER_TAGS.LOGGING_REQUEST_COST);
 
     const logDir = path.join(__dirname, "../../logs");
     if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);

@@ -1,6 +1,6 @@
 import { ToolAction } from "../types/agent";
 
-export function plan(prompt: string): ToolAction[] {
+export function ruleBasedPlanner(prompt: string): ToolAction[] {
   const actions: ToolAction[] = [];
 
   const p = prompt.toLowerCase();
