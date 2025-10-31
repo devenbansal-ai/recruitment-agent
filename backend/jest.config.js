@@ -4,13 +4,15 @@ const tsJestTransformCfg = createDefaultPreset().transform;
 
 /** @type {import("jest").Config} **/
 module.exports = {
+  preset: "ts-jest",
   testEnvironment: "node",
+  testTimeout: 30000,
   transform: {
     ...tsJestTransformCfg,
   },
   testPathIgnorePatterns: ["/node_modules/", "/data/", "/build/"],
   transformIgnorePatterns: ["/node_modules/"],
-  testMatch: ["**/dist/**/*.test.js"],
+  roots: ["src/tests"],
   maxWorkers: "50%",
   globals: {
     "ts-jest": {

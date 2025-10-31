@@ -1,3 +1,5 @@
+import { LLMUsage } from "../llm/provider.types";
+
 export type Tool = {
   name: string;
   description: string;
@@ -43,4 +45,5 @@ export type AgentTrace = {
 export type AgentResponse = {
   output: string;
   trace: any;
+  usage: LLMUsage;
 };

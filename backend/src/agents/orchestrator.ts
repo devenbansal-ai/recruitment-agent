@@ -3,12 +3,14 @@ import { AgentResponse } from "../types/agent";
 import { toolRegistry, validateArgs } from "./registry";
 import { startTrace, appendStep, endAndPersistTrace } from "../utils/traceLogger";
 import { v4 as uuidv4 } from "uuid";
+import { LLMUsage } from "../llm/provider.types";
 
 export async function runAgent(userQuery: string, maxSteps = 5): Promise<AgentResponse> {
   let context = [];
   let finalAnswer = null;
   const requestId = uuidv4();
   const trace = startTrace(requestId, userQuery);
+  const usage: LLMUsage = { input_tokens: 0, output_tokens: 0 };
 
   for (let step = 0; step < maxSteps; step++) {
     const prompt = `User query: ${userQuery}
@@ -28,6 +30,11 @@ Respond in JSON:
         responseTextFormat: { format: { type: "json_object" } },
         instructions,
       });
+
+      if (response.usage) {
+        usage.input_tokens += response.usage.input_tokens;
+        usage.output_tokens += response.usage.output_tokens;
+      }
 
       const agentStep = {
         step: step + 1,
@@ -84,5 +91,5 @@ Respond in JSON:
 
   trace.outcome = finalAnswer;
   endAndPersistTrace(trace);
-  return { output: finalAnswer, trace: context };
+  return { output: finalAnswer, trace: context, usage };
 }

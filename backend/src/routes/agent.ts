@@ -4,6 +4,10 @@ import { ruleBasedPlanner } from "../agents/planner";
 import { executeAction } from "../agents/executor";
 import { startTrace, appendStep, endAndPersistTrace } from "../utils/traceLogger";
 import { runAgent } from "../agents/orchestrator";
+import { LOGGER_TAGS } from "../utils/tags";
+import { estimateCost } from "../utils/costTracker";
+import { llm } from "../llm";
+import Logger from "../utils/logger";
 
 const router = express.Router();
 
@@ -67,6 +71,11 @@ router.post("/ask", async (req, res) => {
 
   try {
     const response = await runAgent(prompt);
+
+    const cost = estimateCost(llm.model, response.usage);
+    Logger.log(LOGGER_TAGS.LLM_ESTIMATED_COST, `$${cost.toFixed(6)}`);
+    res.locals.cost = cost;
+
     res.json(response);
   } catch (err) {
     return res.status(500).json({ error: String(err) });
