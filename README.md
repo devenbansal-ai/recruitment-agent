@@ -131,12 +131,21 @@ npm start
 - Cost and latency depend on OpenAI model selection and Pinecone region. Expect variability.
 - No role-based auth or rate limiting in demo (add before public exposure).
 
-## Measured cost & latency (dev)
+## Measured cost & latency
+
+#### Development
 
 | Scenario                    | Avg latency |  p95 | Avg tokens | Estimated avg cost (USD) |
 | --------------------------- | ----------: | ---: | ---------: | -----------------------: |
-| Cold RAG request (no cache) |        7.3s | 9.1s |        450 |                $0.000131 |
+| Cold RAG request (no cache) |        7.3s | 9.1s |        256 |                $0.000131 |
 | Warm cache (cache hit)      |        17ms | 32ms |          0 |                  $0.0000 |
+
+#### Staging (Railway)
+
+| Scenario                    | Avg latency |   p95 | Avg tokens | Estimated avg cost (USD) |
+| --------------------------- | ----------: | ----: | ---------: | -----------------------: |
+| Cold RAG request (no cache) |        7.9s | 10.2s |        243 |                $0.000146 |
+| Warm cache (cache hit)      |       131ms | 203ms |          0 |                  $0.0000 |
 
 ## 📦 Deployment (Production / Staging)
 

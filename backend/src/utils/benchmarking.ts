@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const RAG_URL = process.env.RAG_URL || "http://localhost:8080/api/rag"; // adjust if needed
+const PORT = process.env.PORT || 8080;
+const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
 const NUM_RUNS = 5;
 
 const QUERIES = [
@@ -22,13 +23,14 @@ async function runBenchmark() {
   console.log(`🚀 Benchmarking ${NUM_RUNS} RAG calls...\n`);
 
   const results: BenchmarkResult[] = [];
+  const ragUrl = BACKEND_URL + "/api/rag";
 
   for (let i = 0; i < QUERIES.length; i++) {
     const query = QUERIES[i];
     const start = performance.now();
 
     try {
-      const response = await axios.post(RAG_URL, { query });
+      const response = await axios.post(ragUrl, { query });
       const end = performance.now();
 
       const latencyMs = end - start;
@@ -55,11 +57,13 @@ function summarize(results: BenchmarkResult[]) {
   const valid = results.filter((r) => !isNaN(r.latencyMs));
   const avgLatency = valid.reduce((sum, r) => sum + r.latencyMs, 0) / valid.length;
   const avgCost = valid.reduce((sum, r) => sum + (r.costUsd || 0), 0) / valid.length;
+  const avgTokens = valid.reduce((sum, r) => sum + (r.tokens || 0), 0) / valid.length;
 
   console.log("\n📊 === BENCHMARK SUMMARY ===");
   console.log(`Total Runs: ${valid.length}`);
   console.log(`Average Latency: ${avgLatency.toFixed(2)} ms`);
   console.log(`Average Cost: $${avgCost.toFixed(6)} per query`);
+  console.log(`Average Tokens: ${avgTokens} per query`);
   console.log(`Throughput: ${(1000 / avgLatency).toFixed(2)} req/sec`);
   console.log("============================\n");
 }
