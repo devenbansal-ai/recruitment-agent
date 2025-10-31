@@ -12,17 +12,18 @@
 │                             Backend (Node + Express + TS)                 │
 │  ┌────────────────────────────────┐      ┌──────────────────────────────┐ │
 │  │  RAG Pipeline                  │      │  Agent Orchestration         │ │
-│  │  • Upload docs → chunk → embed │      | • Planner → Executor Loop    │ │
+│  │  • Upload docs → chunk → embed │      | • Planner → Execute.         │ │
 │  │  • Upsert → Vector DB          │      | • Tool Registry + Validator  │ │
-│  │  • Vector search → LLM answer  │      | • Trace Logger (JSON per req)│ │
+│  │  • Vector search → LLM answer  │      | • Repeat till final_answer   │ │
+│  │                                │      | • Trace Logger (JSON per req)│ │
 │  └────────────────────────────────┘      └──────────────────────────────┘ │
 │              │                                   │                        │
 │              ▼                                   ▼                        │
 │  ┌──────────────────────┐       ┌───────────────────────────────────────┐ │
 │  │ Embeddings Provider  │       │ External Tools (Connectors)           │ │
-│  │  (OpenAI / Ollama)   │       │  - Web Search (SerpAPI)               │ │
+│  │  (OpenAI)            │       │  - Web Search (SerpAPI)               │ │
 │  │                      │       │  - Calendar (Google OAuth API)        │ │
-│  └──────────────────────┘       │  - Vector Search (Turso / Pinecone)   │ │
+│  └──────────────────────┘       │  - Vector Search (Pinecone)           │ │
 │                                 └───────────────────────────────────────┘ │
 └───────────────────────────────────────────────────────────────────────────┘
                                 │

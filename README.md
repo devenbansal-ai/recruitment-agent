@@ -1,6 +1,6 @@
 # 🧠 Recruitment Agent — Backend
 
-> AI-powered recruitment assistant combining **RAG Q&A**, **multi-tool agents**, and **traceable tool orchestration**.
+> AI-powered Recruitment Agent demo combining Retrieval-Augmented Generation and an agentic tool orchestration layer. Implements **RAG ingestion**, **embeddings**, **Pinecone vector store**, **LLM planner + executor**, and **tool connectors (web search, Google Calendar)**.
 
 ---
 
@@ -11,7 +11,7 @@
 | **Language**        | TypeScript (Node 20+)                                        |
 | **Web Framework**   | Express                                                      |
 | **LLM Integration** | OpenAI SDK (v4)                                              |
-| **Vector DB**       | Pinecone / Weaviate (pluggable client)                       |
+| **Vector DB**       | Pinecone (pluggable client)                                  |
 | **Embeddings**      | `text-embedding-3-small` (OpenAI)                            |
 | **Agent Tools**     | Web Search (SerpAPI), Calendar (Google OAuth), Vector Search |
 | **Orchestration**   | Custom planner loop + JSON trace logging                     |
@@ -94,6 +94,7 @@ npm start
 | `VECTOR_DB_URL`                             | Vector store endpoint        |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Calendar tool OAuth          |
 | `SERPAPI_KEY`                               | Web search tool API access   |
+| `GOOGLE_REFRESH_TOKEN`                      | Refresh token for calendar   |
 | `NODE_ENV`                                  | `development` / `production` |
 | `PORT`                                      | Express server port          |
 
@@ -101,15 +102,41 @@ npm start
 
 ## 🧩 Core Modules
 
-| Module                       | Description                                             |
-| ---------------------------- | ------------------------------------------------------- |
-| `/src/routes/ingest.ts`      | File upload → embed → vector upsert → query endpoint    |
-| `/src/routes/agent.ts`       | Agent loop (planner + action executor + trace) endpoint |
-| `/src/agents/tools/`         | Tool implementations (web search, calendar, vector)     |
-| `/src/agents/traceLogger.ts` | JSON trace per request (logging + replay)               |
-| `/src/tests/`                | Unit and E2E tests                                      |
+| Module                        | Description                                                 |
+| ----------------------------- | ----------------------------------------------------------- |
+| `/src/routes/ingest.ts`       | File upload → embed → vector upsert → query endpoint        |
+| `/src/routes/rag.ts`          | RAG endpoint (query → embed → vector DB query → llm)        |
+| `/src/routes/agent.ts`        | Agent loop (LLM planner + action executor + trace) endpoint |
+| `/src/agents/tools/`          | Tool implementations (web search, calendar, vector)         |
+| `/src/utils/traceLogger.ts`   | JSON trace per request (logging + replay)                   |
+| `/src/utils/requestLogger.ts` | Log json request details                                    |
+| `/src/utils/costTracker.ts`   | Log LLM runnning cost for the request                       |
+| `/src/tests/`                 | Unit and E2E tests                                          |
 
 ---
+
+## Tradeoffs
+
+- **LLM planner (iterative)** — flexible and robust, but increases latency and cost (multiple LLM calls). Tradeoff between reliability and cost.
+- **Server model** (Express + Node) — easier local debugging and long-running processes (vector DB connections), but costs more than fully serverless for low traffic.
+- **In-memory cache** — fast and cheap for demo, not resilient across instances. Production must use Redis for shared cache.
+- **Trace files** — stored locally for dev; must move to DB for scale and searchability.
+
+---
+
+## Limitations
+
+- Single-user calendar handling assumed via one `GOOGLE_REFRESH_TOKEN`. Multi-user OAuth not implemented.
+- Planner currently lightly constrained by schema; adversarial prompts may still produce malformed outputs. Defensive parsing & schema validation included.
+- Cost and latency depend on OpenAI model selection and Pinecone region. Expect variability.
+- No role-based auth or rate limiting in demo (add before public exposure).
+
+## Measured cost & latency (dev)
+
+| Scenario                    | Avg latency |  p95 | Avg tokens | Estimated avg cost (USD) |
+| --------------------------- | ----------: | ---: | ---------: | -----------------------: |
+| Cold RAG request (no cache) |        7.3s | 9.1s |        450 |                $0.000131 |
+| Warm cache (cache hit)      |        17ms | 32ms |          0 |                  $0.0000 |
 
 ## 📦 Deployment (Production / Staging)
 
