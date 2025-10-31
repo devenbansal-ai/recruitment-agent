@@ -19,7 +19,7 @@ router.post("/", async (req, res) => {
       res.locals.cached = true;
       res.locals.cost = 0;
       console.log("Cache hit:", cacheKey);
-      return res.json({ ...cached, cached: true });
+      return res.json({ ...cached, cached: true, cost_usd: 0, total_tokens: 0 });
     }
 
     // Query Pinecone
@@ -34,10 +34,14 @@ router.post("/", async (req, res) => {
       instructions: "You are a helpful RAG assistant",
     });
 
+    let cost_usd: number | undefined;
+    let total_tokens: number | undefined;
+
     if (response.usage) {
-      const cost = estimateCost(llm.model, response.usage);
-      Logger.log(LOGGER_TAGS.LLM_ESTIMATED_COST, `$${cost.toFixed(6)}`);
-      res.locals.cost = cost;
+      cost_usd = estimateCost(llm.model, response.usage);
+      total_tokens = response.usage.input_tokens + response.usage.output_tokens;
+      Logger.log(LOGGER_TAGS.LLM_ESTIMATED_COST, `$${cost_usd.toFixed(6)}`);
+      res.locals.cost = cost_usd;
     }
 
     const result = {
@@ -52,7 +56,7 @@ router.post("/", async (req, res) => {
     setCachedLLMResponse(cacheKey, result);
 
     res.locals.cached = false;
-    res.json({ ...result, cached: false });
+    res.json({ ...result, cached: false, total_tokens, cost_usd });
   } catch (err) {
     console.error("RAG error:", err);
     res.status(500).json({ error: "RAG retrieval failed" });
