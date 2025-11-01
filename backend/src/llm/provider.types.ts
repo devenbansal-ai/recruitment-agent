@@ -17,6 +17,7 @@ export interface StreamHandler {
 }
 
 export type LLMResponseOptions = {
+  model?: string;
   temperature?: number;
   instructions?: string;
   responseTextFormat?: ResponseTextConfig;

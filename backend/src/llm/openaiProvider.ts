@@ -19,7 +19,7 @@ export class OpenAIProvider implements LLMProvider {
   }
 
   async generate(prompt: string, options?: LLMResponseOptions): Promise<LLMResponse> {
-    const model = this.model;
+    const model = options?.model || this.model;
     const response = await this.client.responses.create({
       input: prompt,
       model,
@@ -42,20 +42,29 @@ export class OpenAIProvider implements LLMProvider {
   async stream(
     prompt: string,
     handler: StreamHandler,
-    options?: { model?: string }
+    options?: LLMResponseOptions
   ): Promise<void> {
-    const model = options?.model || "gpt-4o-mini";
+    const model = options?.model || this.model;
 
-    const stream = await this.client.chat.completions.create({
+    const stream = await this.client.responses.create({
+      input: prompt,
       model,
-      messages: [{ role: "user", content: prompt }],
+      instructions: options?.instructions,
+      text: options?.responseTextFormat,
+      temperature: options?.temperature,
       stream: true,
     });
 
     try {
-      for await (const chunk of stream) {
-        const delta = chunk.choices?.[0]?.delta?.content;
-        if (delta) handler.onData(delta);
+      for await (const event of stream) {
+        // Each event has an `event` type and `data`
+        // We focus on text delta events
+        if (event.type === "response.output_text.delta") {
+          const deltaText = event.delta;
+          if (deltaText) {
+            handler.onData(deltaText);
+          }
+        }
       }
       handler.onEnd();
     } catch (err) {

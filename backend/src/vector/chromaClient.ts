@@ -3,6 +3,7 @@ import { OpenAIEmbeddingFunction } from "@chroma-core/openai";
 import { VectorProvider, VectorItem, VectorResult, QueryParams } from "./provider.types";
 import Logger from "../utils/logger";
 import { LOGGER_TAGS } from "../utils/tags";
+import { chunkTextWithMetadata } from "../embed/chunker";
 
 export class ChromaVectorProvider implements VectorProvider {
   name = "chroma";
@@ -23,6 +24,20 @@ export class ChromaVectorProvider implements VectorProvider {
       name: "my_collection_1",
       embeddingFunction: embeddingFn,
     });
+  }
+
+  async ingest(text: string, source: string, pageNumber?: number): Promise<number> {
+    const chunks = await chunkTextWithMetadata(text, source, pageNumber);
+
+    const vectors = chunks.map((e, i) => ({
+      id: e.id,
+      text: e.content,
+      metadata: e.metadata,
+    }));
+
+    await this.upsert(vectors);
+
+    return chunks.length;
   }
 
   async upsert(items: VectorItem[]): Promise<void> {

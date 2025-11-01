@@ -18,7 +18,7 @@ ${context.length ? `Previous context: ${JSON.stringify(context, null, 2)}` : ""}
 
 Decide next action:
 Respond in JSON:
-{ "action": "tool_name" | "final_answer", "input": { "arg_1": "value_1", ... } | undefined }`;
+{ "action": "tool_name", "input": { "arg_1": "value_1", ... } | undefined } | { "action": "final_answer", "answer": "..." }`;
 
     const instructions = `You are a reasoning agent. You can use these tools:\n${toolRegistry.describeAll()}`;
 
@@ -46,7 +46,7 @@ Respond in JSON:
       decision = JSON.parse(response.text);
 
       if (decision.action === "final_answer") {
-        finalAnswer = decision.input;
+        finalAnswer = decision.answer;
         break;
       }
 
@@ -72,9 +72,10 @@ Respond in JSON:
       }
 
       context.push({
+        step: step + 1,
         tool: decision.action,
         input: decision.input,
-        toolResult,
+        ...toolResult,
       });
     } catch (err) {
       appendStep(trace, {

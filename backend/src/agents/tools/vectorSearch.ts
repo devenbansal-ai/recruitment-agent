@@ -17,7 +17,6 @@ async function vectorSearch(args: IVectorSearchArgs): Promise<ToolResult> {
     const results = await vector.query({
       query,
       topK,
-      includeMetadata: true,
       filter: filter ?? undefined,
     });
 

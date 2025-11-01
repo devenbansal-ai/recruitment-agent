@@ -14,12 +14,12 @@ export interface VectorResult {
 export interface QueryParams {
   query: string;
   topK?: number;
-  includeMetadata?: boolean;
   filter?: Record<string, any>;
 }
 
 export interface VectorProvider {
   name: string;
   upsert(items: VectorItem[]): Promise<void>;
+  ingest(text: string, source: string, pageNumber?: number): Promise<number>;
   query(params: QueryParams): Promise<VectorResult[]>;
 }

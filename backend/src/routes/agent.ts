@@ -4,15 +4,16 @@ import { LOGGER_TAGS } from "../utils/tags";
 import { estimateCost } from "../utils/costTracker";
 import { llm } from "../llm";
 import Logger from "../utils/logger";
+import { toolRegistry } from "../agents/registry";
 
 const router = express.Router();
 
 router.post("/ask", async (req, res) => {
-  const { prompt } = req.body;
-  if (!prompt) return res.status(400).json({ error: "Missing prompt" });
+  const { query } = req.body;
+  if (!query) return res.status(400).json({ error: "Missing query" });
 
   try {
-    const response = await runAgent(prompt);
+    const response = await runAgent(query);
 
     const cost = estimateCost(llm.model, response.usage);
     Logger.log(LOGGER_TAGS.LLM_ESTIMATED_COST, `$${cost.toFixed(6)}`);
@@ -21,6 +22,20 @@ router.post("/ask", async (req, res) => {
     res.json(response);
   } catch (err) {
     return res.status(500).json({ error: String(err) });
+  }
+});
+
+router.post("/retry", async (req, res) => {
+  try {
+    const { action, input } = req.body;
+    const tool = toolRegistry.get(action);
+    if (!tool) return res.status(400).json({ error: "Unknown tool" });
+
+    const output = await tool.execute(input);
+    res.json({ output });
+  } catch (e) {
+    console.error("Retry error:", e);
+    res.status(500).json({ error: "Retry failed" });
   }
 });
 

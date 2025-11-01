@@ -68,7 +68,7 @@ _(Assuming PORT = 8080)_
 | GET | http://localhost:8080/api/web-search | Call web search api |
 | GET | http://localhost:8080/api/google-auth/generate-code | Generate google auth code |
 | GET | http://localhost:8080/api/calendar/events | List all calendar events |
-| POST | http://localhost:8080/api/agent | Call an agent | prompt |
+| POST | http://localhost:8080/api/agent | Call an agent | query |
 | GET | http://localhost:8080/api/agent/{request-id}/steps | Retreive Agent Logs |
 
 ### 5️⃣ Run Tests

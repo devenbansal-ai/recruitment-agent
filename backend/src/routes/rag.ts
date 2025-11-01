@@ -6,12 +6,16 @@ import { getCachedLLMResponse, setCachedLLMResponse } from "../llm/cache";
 import Logger from "../utils/logger";
 import { estimateCost } from "../utils/costTracker";
 import { LOGGER_TAGS } from "../utils/tags";
+import { getStreamHandler } from "../utils/stream";
 
 const router = express.Router();
+const RAG_INSTRUCTIONS = "You are a helpful RAG assistant";
 
 router.post("/", async (req, res) => {
   try {
     const { query } = req.body;
+    if (!query) return res.status(400).json({ error: "Missing query" });
+
     const cacheKey = `rag:${query}`;
     const cached = getCachedLLMResponse(cacheKey);
 
@@ -31,7 +35,7 @@ router.post("/", async (req, res) => {
 
     // Generate answer using retrieved context
     const response = await llm.generate(prompt, {
-      instructions: "You are a helpful RAG assistant",
+      instructions: RAG_INSTRUCTIONS,
     });
 
     let cost_usd: number | undefined;
@@ -57,6 +61,33 @@ router.post("/", async (req, res) => {
 
     res.locals.cached = false;
     res.json({ ...result, cached: false, total_tokens, cost_usd });
+  } catch (err) {
+    console.error("RAG error:", err);
+    res.status(500).json({ error: "RAG retrieval failed" });
+  }
+});
+
+router.post("/stream", async (req, res) => {
+  try {
+    const { query } = req.body;
+    if (!query) return res.status(400).json({ error: "Missing query" });
+
+    // Set headers for SSE (Server-Sent Events)
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    // Query Pinecone
+    const results = await vector.query({ query, topK: 5 });
+
+    const context = results.map((m: VectorResult) => m.text).join("\n");
+
+    const prompt = `Use the context below to answer:\n${context}\n\nQuestion: ${query}`;
+
+    await llm.stream(prompt, getStreamHandler(res), {
+      instructions: RAG_INSTRUCTIONS,
+    });
   } catch (err) {
     console.error("RAG error:", err);
     res.status(500).json({ error: "RAG retrieval failed" });

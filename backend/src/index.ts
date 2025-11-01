@@ -22,6 +22,7 @@ import ragRoutes from "./routes/rag";
 import googleAuthRoutes from "./routes/googleAuth";
 import webSearchRoutes from "./routes/webSearch";
 import calendarRoutes from "./routes/calendar";
+import uploadRoutes from "./routes/upload";
 import { LOGGER_TAGS } from "./utils/tags";
 import { logRequestCost } from "./utils/requestLogger";
 
@@ -43,6 +44,7 @@ app.use("/api/rag", ragRoutes);
 app.use("/api/vector", vectorRoutes);
 app.use("/api/web-search", webSearchRoutes);
 app.use("/api/calendar", calendarRoutes);
+app.use("/api/upload", uploadRoutes);
 
 app.use("/api", testLLMStreamRoutes);
 app.use("/api", testLLMRoutes);

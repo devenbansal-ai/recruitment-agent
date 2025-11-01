@@ -4,6 +4,7 @@ import { LOGGER_TAGS } from "../utils/tags";
 import { Index, PineconeRecord, RecordMetadata } from "@pinecone-database/pinecone";
 import { llm } from "../llm/index";
 import { getPineconeIndex } from "../services/vectorStore";
+import { chunkTextWithMetadata } from "../embed/chunker";
 
 export class PineconeVectorProvider implements VectorProvider {
   name = "pinecone";
@@ -11,6 +12,20 @@ export class PineconeVectorProvider implements VectorProvider {
 
   constructor() {
     this.index = getPineconeIndex();
+  }
+
+  async ingest(text: string, source: string, pageNumber?: number): Promise<number> {
+    const chunks = await chunkTextWithMetadata(text, source, pageNumber);
+
+    const vectors = chunks.map((e, i) => ({
+      id: e.id,
+      text: e.content,
+      metadata: e.metadata,
+    }));
+
+    await this.upsert(vectors);
+
+    return chunks.length;
   }
 
   async upsert(items: VectorItem[]): Promise<void> {
@@ -40,7 +55,7 @@ export class PineconeVectorProvider implements VectorProvider {
     const results = await this.index.query({
       vector: embedding,
       topK: params.topK ?? 3,
-      includeMetadata: params.includeMetadata ?? false,
+      includeMetadata: true,
     });
 
     Logger.log(LOGGER_TAGS.PINECONE_QUERY_MATCHES, results.matches);
