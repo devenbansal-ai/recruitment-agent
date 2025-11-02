@@ -52,4 +52,5 @@ export const calendarCreateEventTool: Tool = {
   },
   execute: createEvent,
   additionalInfo: () => `Current data and time is ${new Date().toString()}`,
+  isEnabled: () => true,
 };

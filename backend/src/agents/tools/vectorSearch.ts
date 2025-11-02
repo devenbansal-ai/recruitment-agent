@@ -34,4 +34,5 @@ export const vectorSearchTool: Tool = {
     topK: { type: "number", description: "Number of results to return", required: false },
   },
   execute: vectorSearch,
+  isEnabled: () => true,
 };

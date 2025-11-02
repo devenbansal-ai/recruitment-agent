@@ -62,4 +62,5 @@ export const webSearchTool: Tool = {
     query: { type: "string", description: "The query to search the web for.", required: true },
   },
   execute: webSearch,
+  isEnabled: () => true,
 };

@@ -30,4 +30,5 @@ export const calendarListEventsTool: Tool = {
   argsSchema: {},
   execute: listEvents,
   additionalInfo: () => `Current data and time is ${new Date().toString()}`,
+  isEnabled: () => true,
 };

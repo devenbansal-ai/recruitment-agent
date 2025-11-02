@@ -13,6 +13,7 @@ export const TOOLS = [
 
 type ToolRegistry = {
   tools: Tool[];
+  getEnabledTools: () => Tool[];
   describeAll: () => string;
   has: (name: string) => boolean;
   get: (name: string) => Tool | undefined;
@@ -20,14 +21,17 @@ type ToolRegistry = {
 
 export const toolRegistry: ToolRegistry = {
   tools: TOOLS,
+  getEnabledTools() {
+    return this.tools.filter((tool) => tool.isEnabled());
+  },
   has(name) {
-    return this.tools.some((tool) => tool.name === name);
+    return this.getEnabledTools().some((tool) => tool.name === name && tool.isEnabled());
   },
   get(name) {
-    return this.tools.find((tool) => tool.name === name);
+    return this.getEnabledTools().find((tool) => tool.name === name && tool.isEnabled());
   },
   describeAll() {
-    return this.tools
+    return this.getEnabledTools()
       .map((tool) => {
         const argList = Object.entries(tool.argsSchema)
           .map(

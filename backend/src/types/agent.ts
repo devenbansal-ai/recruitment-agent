@@ -6,6 +6,7 @@ export type Tool = {
   argsSchema: { [argName: string]: { type: string; description: string; required?: boolean } };
   execute: (args: any) => Promise<ToolResult> | ToolResult;
   additionalInfo?: () => string;
+  isEnabled: () => boolean;
 };
 
 export interface ToolInput {
