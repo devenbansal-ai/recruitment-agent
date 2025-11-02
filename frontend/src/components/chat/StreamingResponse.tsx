@@ -1,6 +1,9 @@
 "use client";
 import { API_URLS } from "@/api/urls";
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
 
 interface StreamingResponseProps {
   query: string;
@@ -11,7 +14,7 @@ export default function StreamingResponse({
   query,
   onComplete,
 }: StreamingResponseProps) {
-  const [text, setText] = useState("");
+  const [markdown, setMarkdown] = useState("");
   const [sources, setSources] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -22,7 +25,7 @@ export default function StreamingResponse({
 
     const fetchStream = async () => {
       setLoading(true);
-      setText("");
+      setMarkdown("");
 
       const response = await fetch(API_URLS.RAG_STREAM, {
         method: "POST",
@@ -54,7 +57,7 @@ export default function StreamingResponse({
             const jsonStr = line.replace(/^data:\s*/, "");
             try {
               const data = JSON.parse(jsonStr);
-              if (data.token) setText((prev) => prev + data.token);
+              if (data.token) setMarkdown((prev) => prev + data.token);
               if (data.sources) setSources(data.sources);
               if (data.done) {
                 reader.cancel();
@@ -91,7 +94,14 @@ export default function StreamingResponse({
       {loading && (
         <p className="text-sm text-gray-400">Streaming response...</p>
       )}
-      <pre className="whitespace-pre-wrap mt-2">{text}</pre>
+      <div className="prose prose-invert max-w-none">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeHighlight]}
+        >
+          {markdown}
+        </ReactMarkdown>
+      </div>
 
       {sources.length > 0 && (
         <div className="mt-4 border-t border-gray-700 pt-2">

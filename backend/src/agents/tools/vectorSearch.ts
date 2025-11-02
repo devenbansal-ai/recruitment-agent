@@ -14,20 +14,13 @@ async function vectorSearch(args: IVectorSearchArgs): Promise<ToolResult> {
     const { query, topK = 5, filter } = args;
     Logger.log(LOGGER_TAGS.VECTOR_SEARCH_QUERY, query);
 
-    const results = await vector.query({
+    const vectorSearchResult = await vector.query({
       query,
       topK,
       filter: filter ?? undefined,
     });
 
-    const items = results.map((result) => ({
-      id: result.id,
-      score: result.score,
-      metadata: result.metadata,
-      snippet: result.text,
-    }));
-
-    return { success: true, output: { query, items } };
+    return { success: true, output: { query, vectorSearchResult } };
   } catch (err: any) {
     return { success: false, error: err?.message ?? String(err) };
   }

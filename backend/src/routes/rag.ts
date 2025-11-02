@@ -1,15 +1,21 @@
 import express from "express";
 import { vector } from "../vector";
-import { VectorResult } from "../vector/provider.types";
 import { llm } from "../llm";
 import { getCachedLLMResponse, setCachedLLMResponse } from "../llm/cache";
 import Logger from "../utils/logger";
 import { estimateCost } from "../utils/costTracker";
 import { LOGGER_TAGS } from "../utils/tags";
 import { getStreamHandler } from "../utils/stream";
+import { getCitationSourcesFromVectorResults, getContextFromVectorResults } from "../utils/vector";
 
 const router = express.Router();
-const RAG_INSTRUCTIONS = "You are a helpful RAG assistant";
+const RAG_INSTRUCTIONS = `You are a helpful assistant using retrieved documents to answer questions.
+Each document is prefixed by a number in square brackets [1], [2], etc.
+When you write the answer, cite sources inline using their numbers, like this: [1][3].
+If multiple sources support the same fact, cite all of them.
+
+If you cannot find the answer in the retrieved documents, say "I don’t have enough information from the provided sources."
+`;
 
 router.post("/", async (req, res) => {
   try {
@@ -27,14 +33,22 @@ router.post("/", async (req, res) => {
     }
 
     // Query Pinecone
-    const results = await vector.query({ query, topK: 5 });
+    const vectorSearchResults = await vector.query({ query, topK: 5 });
 
-    const context = results.map((m: VectorResult) => m.text).join("\n");
+    const context = getContextFromVectorResults(vectorSearchResults);
+    const sources = getCitationSourcesFromVectorResults(vectorSearchResults);
 
-    const prompt = `Use the context below to answer:\n${context}\n\nQuestion: ${query}`;
+    const userPrompt = `
+    Question: ${query}
+
+    Retrieved Documents:
+    ${context}
+
+    Answer:
+    `;
 
     // Generate answer using retrieved context
-    const response = await llm.generate(prompt, {
+    const response = await llm.generate(userPrompt, {
       instructions: RAG_INSTRUCTIONS,
     });
 
@@ -48,13 +62,15 @@ router.post("/", async (req, res) => {
       res.locals.cost = cost_usd;
     }
 
+    const citations = [...new Set(response.text.match(/\[(\d+)\]/g))].map((c) =>
+      parseInt(c.replace(/\[|\]/g, ""), 10)
+    );
+
+    const usedSources = sources.filter((_, i) => citations.includes(i + 1));
+
     const result = {
-      answer: response.text,
-      sources: results.map((m: VectorResult) => ({
-        source: m.metadata?.source,
-        page: m.metadata?.pageNumber,
-        score: m.score,
-      })),
+      output: response.text,
+      sources: usedSources,
     };
 
     setCachedLLMResponse(cacheKey, result);
@@ -79,9 +95,9 @@ router.post("/stream", async (req, res) => {
     res.flushHeaders();
 
     // Query Pinecone
-    const results = await vector.query({ query, topK: 5 });
+    const vectorSearchResults = await vector.query({ query, topK: 5 });
 
-    const context = results.map((m: VectorResult) => m.text).join("\n");
+    const context = getContextFromVectorResults(vectorSearchResults);
 
     const prompt = `Use the context below to answer:\n${context}\n\nQuestion: ${query}`;
 

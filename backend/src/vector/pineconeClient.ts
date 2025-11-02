@@ -60,6 +60,13 @@ export class PineconeVectorProvider implements VectorProvider {
 
     Logger.log(LOGGER_TAGS.PINECONE_QUERY_MATCHES, results.matches);
 
+    const context = results.matches
+      .map(
+        (match, i) =>
+          `[${i + 1}] ${match.metadata?.content}\n(Source: ${match.metadata?.source || "Unknown"})`
+      )
+      .join("\n\n");
+
     return results.matches.map((match) => {
       return {
         id: match.id,
