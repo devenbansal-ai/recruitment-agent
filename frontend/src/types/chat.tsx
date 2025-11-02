@@ -10,10 +10,21 @@ export type UserMessage = {
   content: string;
 };
 
+export type TelemetryData = {
+  route: string;
+  startTime: number;
+  endTime?: number;
+  latencyMs?: number;
+  tokensIn?: number;
+  tokensOut?: number;
+  totalCostUsd?: number;
+};
+
 export type AssistantMessage = {
   role: "assistant";
   content: string;
   sources?: CitationSource[];
+  telemetry?: TelemetryData;
 };
 
 export type Message = UserMessage | AssistantMessage;

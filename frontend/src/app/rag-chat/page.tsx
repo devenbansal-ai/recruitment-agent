@@ -3,7 +3,8 @@ import { useState } from "react";
 import axios from "axios";
 import { API_URLS } from "@/api/urls";
 import { Message } from "@/types/chat";
-import ResponseWithCitations from "@/components/chat/ResponseWithCitations";
+import ResponseWithCitations from "@/components/chat/AssistantResponse";
+import AssistantResponse from "@/components/chat/AssistantResponse";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -25,7 +26,8 @@ export default function ChatPage() {
       });
       const reply = res.data?.output || res.data?.response || "No response";
       const sources = res.data?.sources || [];
-      appendMessage({ role: "assistant", content: reply, sources });
+      const telemetry = res.data?.telemetry;
+      appendMessage({ role: "assistant", content: reply, sources, telemetry });
     } catch (e) {
       appendMessage({ role: "assistant", content: "❌ Error calling backend" });
     } finally {
@@ -42,7 +44,7 @@ export default function ChatPage() {
               {m.content}
             </div>
           ) : (
-            <ResponseWithCitations message={m} />
+            <AssistantResponse message={m} />
           )
         )}
       </div>

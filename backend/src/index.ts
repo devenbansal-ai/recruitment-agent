@@ -25,6 +25,7 @@ import calendarRoutes from "./routes/calendar";
 import uploadRoutes from "./routes/upload";
 import { LOGGER_TAGS } from "./utils/tags";
 import { logRequestCost } from "./utils/requestLogger";
+import { limiter } from "./utils/rateLimitter";
 
 Logger.log(LOGGER_TAGS.STARTING_BACKEND);
 
@@ -32,6 +33,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(logRequestCost);
+app.use(limiter);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/candidate", candidateRoutes);

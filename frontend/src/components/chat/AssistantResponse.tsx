@@ -1,7 +1,7 @@
 import { AssistantMessage, CitationSource } from "@/types/chat";
 import { useState } from "react";
 
-export default function ResponseWithCitations({
+export default function AssistantResponse({
   message,
 }: {
   message: AssistantMessage;
@@ -9,7 +9,7 @@ export default function ResponseWithCitations({
   const [activeCitation, setActiveCitation] = useState<CitationSource | null>(
     null
   );
-  const { content, sources } = message;
+  const { content, sources, telemetry } = message;
 
   return (
     <div className="relative">
@@ -39,6 +39,16 @@ export default function ResponseWithCitations({
           return part;
         })}
       </p>
+      {telemetry && (
+        <div className="absolute bg-white border rounded-lg p-4 mt-2 w-80 shadow-lg">
+          <div className="telemetry">
+            <p>Latency: {telemetry.latencyMs?.toFixed(1)} ms</p>
+            <p>Tokens In: {telemetry.tokensIn}</p>
+            <p>Tokens Out: {telemetry.tokensOut}</p>
+            <p>Est. Cost: ${telemetry.totalCostUsd?.toFixed(5)}</p>
+          </div>
+        </div>
+      )}
 
       {activeCitation && (
         <div className="absolute bg-white border rounded-lg p-4 mt-2 w-80 shadow-lg">
