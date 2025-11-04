@@ -14,7 +14,6 @@ export const TOOLS = [
 type ToolRegistry = {
   tools: Tool[];
   getEnabledTools: () => Tool[];
-  describeAll: () => string;
   has: (name: string) => boolean;
   get: (name: string) => Tool | undefined;
 };
@@ -22,7 +21,8 @@ type ToolRegistry = {
 export const toolRegistry: ToolRegistry = {
   tools: TOOLS,
   getEnabledTools() {
-    return this.tools.filter((tool) => tool.isEnabled());
+    const disabled = process.env.DISABLED_TOOLS?.split(",") ?? [];
+    return this.tools.filter((tool) => tool.isEnabled() && !disabled.includes(tool.name));
   },
   has(name) {
     return this.getEnabledTools().some((tool) => tool.name === name && tool.isEnabled());
@@ -30,25 +30,28 @@ export const toolRegistry: ToolRegistry = {
   get(name) {
     return this.getEnabledTools().find((tool) => tool.name === name && tool.isEnabled());
   },
-  describeAll() {
-    return this.getEnabledTools()
-      .map((tool) => {
-        const argList = Object.entries(tool.argsSchema)
-          .map(
-            ([key, info]) =>
-              `- ${key} (${info.type})${info.required ? " [required]" : ""}: ${info.description}`
-          )
-          .join("\n");
+};
 
-        return `### ${tool.name}
+export function decribeTool(tool: Tool): string {
+  const argList = Object.entries(tool.argsSchema)
+    .map(
+      ([key, info]) =>
+        `- ${key} (${info.type})${info.required ? " [required]" : ""}: ${info.description}`
+    )
+    .join("\n");
+
+  return `### ${tool.name}
 Description: ${tool.description}
 Arguments:
 ${argList ? argList : "None"}
 ${tool.additionalInfo ? `Additional info: ${tool.additionalInfo()}` : ""}`;
-      })
-      .join("\n\n");
-  },
-};
+}
+
+export function describeAllTools(tools: Tool[]): string {
+  const toolsDescription = tools.map(decribeTool).join("\n\n");
+
+  return toolsDescription;
+}
 
 export function validateArgs(tool: Tool, args: any) {
   for (const [key, info] of Object.entries(tool.argsSchema)) {

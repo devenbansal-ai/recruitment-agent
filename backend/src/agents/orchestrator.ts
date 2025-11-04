@@ -1,6 +1,6 @@
 import { llm } from "../llm";
 import { AgentResponse } from "../types/agent";
-import { toolRegistry, validateArgs } from "./registry";
+import { describeAllTools, toolRegistry, validateArgs } from "./registry";
 import { startTrace, appendStep, endAndPersistTrace } from "../utils/traceLogger";
 import { v4 as uuidv4 } from "uuid";
 import { LLMUsage } from "../llm/provider.types";
@@ -20,7 +20,7 @@ Decide next action:
 Respond in JSON:
 { "action": "tool_name", "input": { "arg_1": "value_1", ... } | undefined } | { "action": "final_answer", "answer": "..." }`;
 
-    const instructions = `You are a reasoning agent. You can use these tools:\n${toolRegistry.describeAll()}`;
+    const instructions = `You are a reasoning agent. You can use these tools:\n${describeAllTools(toolRegistry.getEnabledTools())}`;
 
     let decision;
 

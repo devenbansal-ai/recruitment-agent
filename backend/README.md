@@ -160,3 +160,43 @@ npm start
 ```
 curl https://<your-project>.up.railway.app/api/test-llm
 ```
+
+## 🛡️ Security & Safety Guardrails
+
+### Environment Protection
+
+| Concern             | Mitigation                                                                                                                |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| API Keys exposure   | Never commit `.env` files. Use Railway/Vercel Environment Variables UI for `OPENAI_API_KEY`, `GOOGLE_CLIENT_SECRET`, etc. |
+| Unauthorized access | All backend endpoints behind `authMiddleware` stub → replace with JWT/OAuth before production.                            |
+| Sensitive logs      | Strip PII and tokens from logs before printing.                                                                           |
+| Dependency vulns    | Run `npm audit --production` weekly. Use GitHub Dependabot.                                                               |
+
+### Agent safety controls
+
+| Category             | Implementation                                                 | Description                                                                                  |
+| -------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **Action Validator** | `src/agent/actionValidator.ts`                                 | Rejects destructive actions (e.g. file delete, network write) unless explicitly whitelisted. |
+| **Tool Whitelist**   | `ALLOWED_TOOLS` array in `.env`                                | Only listed tools can be invoked by planner. Non-listed → blocked.                           |
+| **Rate Limiter**     | `express-rate-limit`                                           | Prevents flooding of LLM calls.                                                              |
+| **Concurrency Cap**  | `p-limit(5)`                                                   | Ensures ≤ 5 LLM calls at once.                                                               |
+| **LLM Prompt Guard** | Planner prompt contains: “Never execute code or modify files.” | Reduces prompt-injection risk.                                                               |
+
+### How to Disable a Tool
+
+**Option A** - Within code:
+Navigate to the specific tool in src/agent/tools/\* and set the return value for isEnabled to false
+
+**Option B** - Disable at runtime:
+In .env:
+DISABLED_TOOLS=calendar,web_search
+
+### Future Hardening Roadmap
+
+- Add JWT auth middleware (Authorization: Bearer <token>).
+
+- Use Redis-backed rate limiting for multi-instance deploy.
+
+- Add CSP headers and HTTPS redirect middleware.
+
+- Integrate OpenAI “response moderation” endpoint for content safety.
