@@ -4,6 +4,7 @@ import { describeAllTools, toolRegistry, validateArgs } from "./registry";
 import { startTrace, appendStep, endAndPersistTrace } from "../utils/traceLogger";
 import { v4 as uuidv4 } from "uuid";
 import { LLMUsage, StreamHandler } from "../llm/provider.types";
+import { CitationSource } from "../vector/provider.types";
 
 export async function runAgent(
   userQuery: string,
@@ -11,20 +12,32 @@ export async function runAgent(
   maxSteps = 5
 ): Promise<AgentResponse> {
   let context = [];
+  const sources: CitationSource[] = [];
   let finalAnswer = null;
   const requestId = uuidv4();
   const trace = startTrace(requestId, userQuery);
   const usage: LLMUsage = { input_tokens: 0, output_tokens: 0 };
 
   for (let step = 0; step < maxSteps; step++) {
-    const prompt = `User query: ${userQuery}
-${context.length ? `Previous context: ${JSON.stringify(context, null, 2)}` : ""}
+    const prompt = `
+## User query: 
+${userQuery}
 
-Decide next action:
-Respond in JSON:
+${
+  context.length
+    ? `## Previous context: ${JSON.stringify(context, null, 2)}
+`
+    : ""
+}
+
+## Decide the next action: one of the tools or final_answer
+## Respond in JSON:
 { "action": "tool_name", "input": { "arg_1": "value_1", ... } | undefined } | { "action": "final_answer", "answer": "..." }
 
-In case of action being final_answer, provide a well formatted markdown string as the answer.
+## Rules
+- In case of action being final_answer, provide a well formatted markdown string as the answer.
+- In case of documents refered from vector search:
+  Each retrieved document is prefixed by a number in square brackets [1], [2], etc. When you write the final answer, cite sources inline using their numbers, like this: [1][3]. If multiple sources support the same fact, cite all of them.
 `;
 
     const instructions = `You are a reasoning agent. You can use these tools:\n${describeAllTools(toolRegistry.getEnabledTools())}`;
@@ -69,6 +82,9 @@ In case of action being final_answer, provide a well formatted markdown string a
 
       const toolResult = await tool.execute(args);
 
+      const toolSources = toolResult.sources || [];
+      sources.push(...toolSources);
+
       const stepResult = {
         step: step + 1,
         timestamp: new Date().toISOString(),
@@ -99,7 +115,7 @@ In case of action being final_answer, provide a well formatted markdown string a
     }
   }
 
-  streamHandler.onData({ data: finalAnswer, isInterstitialMessage: false });
+  streamHandler.onData({ data: finalAnswer, isInterstitialMessage: false, sources: sources });
 
   trace.outcome = finalAnswer;
   endAndPersistTrace(trace);

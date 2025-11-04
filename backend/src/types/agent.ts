@@ -1,4 +1,5 @@
 import { LLMUsage } from "../llm/provider.types";
+import { CitationSource } from "../vector/provider.types";
 
 export type Tool<T> = {
   name: string;
@@ -22,6 +23,7 @@ export type ToolAction = {
 
 export type ToolResult = {
   success: boolean;
+  sources?: CitationSource[];
   output?: any;
   error?: string;
 };

@@ -4,7 +4,7 @@ import { LOGGER_TAGS } from "../utils/tags";
 import { estimateCost } from "../utils/costTracker";
 import { llm } from "../llm";
 import Logger from "../utils/logger";
-import { toolRegistry } from "../agents/registry";
+import { describeAllTools, toolRegistry } from "../agents/registry";
 import { Telemetry } from "../utils/telemetry";
 import { limit } from "../utils/concurency";
 import { getStreamHandler } from "../utils/stream";
@@ -53,6 +53,10 @@ router.post("/retry", async (req, res) => {
     console.error("Retry error:", e);
     res.status(500).json({ error: "Retry failed" });
   }
+});
+
+router.get("/tools", async (req, res) => {
+  res.json({ tools: describeAllTools(toolRegistry.getEnabledTools()) });
 });
 
 export default router;

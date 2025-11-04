@@ -58,8 +58,6 @@ export class PineconeVectorProvider implements VectorProvider {
       includeMetadata: true,
     });
 
-    Logger.log(LOGGER_TAGS.PINECONE_QUERY_MATCHES, results.matches);
-
     const context = results.matches
       .map(
         (match, i) =>
