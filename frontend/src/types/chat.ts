@@ -5,7 +5,12 @@ export type CitationSource = {
   url?: string;
 };
 
-export type UserMessage = {
+type BaseMessage = {
+  id: string;
+  role: string;
+};
+
+export type UserMessage = BaseMessage & {
   role: "user";
   content: string;
 };
@@ -20,9 +25,10 @@ export type TelemetryData = {
   totalCostUsd?: number;
 };
 
-export type AssistantMessage = {
+export type AssistantMessage = BaseMessage & {
   role: "assistant";
   content: string;
+  interstitialMessage?: string;
   sources?: CitationSource[];
   telemetry?: TelemetryData;
 };

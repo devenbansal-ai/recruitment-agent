@@ -16,7 +16,11 @@ export default function ChatPage() {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
-    const userMsg: Message = { role: "user", content: input };
+    const userMsg: Message = {
+      id: String(Date.now()),
+      role: "user",
+      content: input,
+    };
     appendMessage(userMsg);
     setInput("");
     setLoading(true);
@@ -27,9 +31,19 @@ export default function ChatPage() {
       const reply = res.data?.output || res.data?.response || "No response";
       const sources = res.data?.sources || [];
       const telemetry = res.data?.telemetry;
-      appendMessage({ role: "assistant", content: reply, sources, telemetry });
+      appendMessage({
+        id: String(Date.now()),
+        role: "assistant",
+        content: reply,
+        sources,
+        telemetry,
+      });
     } catch (e) {
-      appendMessage({ role: "assistant", content: "❌ Error calling backend" });
+      appendMessage({
+        id: String(Date.now()),
+        role: "assistant",
+        content: "❌ Error calling backend",
+      });
     } finally {
       setLoading(false);
     }
