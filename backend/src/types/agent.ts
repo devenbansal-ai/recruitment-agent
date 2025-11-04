@@ -1,12 +1,13 @@
 import { LLMUsage } from "../llm/provider.types";
 
-export type Tool = {
+export type Tool<T> = {
   name: string;
   description: string;
   argsSchema: { [argName: string]: { type: string; description: string; required?: boolean } };
-  execute: (args: any) => Promise<ToolResult> | ToolResult;
+  execute: (args: T) => Promise<ToolResult> | ToolResult;
   additionalInfo?: () => string;
   isEnabled: () => boolean;
+  getLoadingMessage: (args: T) => string;
 };
 
 export interface ToolInput {

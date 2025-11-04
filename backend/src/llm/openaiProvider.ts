@@ -62,7 +62,7 @@ export class OpenAIProvider implements LLMProvider {
         if (event.type === "response.output_text.delta") {
           const deltaText = event.delta;
           if (deltaText) {
-            handler.onData(deltaText);
+            handler.onData({ data: deltaText, isInterstitialMessage: false });
           }
         }
       }

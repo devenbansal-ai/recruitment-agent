@@ -32,7 +32,7 @@ async function createEvent(args: ICalendarCreateEventArgs): Promise<ToolResult> 
   }
 }
 
-export const calendarCreateEventTool: Tool = {
+export const calendarCreateEventTool: Tool<ICalendarCreateEventArgs> = {
   name: "calendar_create_event",
   description: "Creates an event in the calendar, given its title, start time and end time",
   argsSchema: {
@@ -53,4 +53,5 @@ export const calendarCreateEventTool: Tool = {
   execute: createEvent,
   additionalInfo: () => `Current data and time is ${new Date().toString()}`,
   isEnabled: () => true,
+  getLoadingMessage: (args) => `Create a event in your calendar for "${args.summary}"`,
 };

@@ -26,7 +26,7 @@ async function vectorSearch(args: IVectorSearchArgs): Promise<ToolResult> {
   }
 }
 
-export const vectorSearchTool: Tool = {
+export const vectorSearchTool: Tool<IVectorSearchArgs> = {
   name: "vector_search",
   description: "Searches the vector for the given query and returns top matches",
   argsSchema: {
@@ -35,4 +35,5 @@ export const vectorSearchTool: Tool = {
   },
   execute: vectorSearch,
   isEnabled: () => true,
+  getLoadingMessage: (args) => `Searching the documents for ${args.query}`,
 };

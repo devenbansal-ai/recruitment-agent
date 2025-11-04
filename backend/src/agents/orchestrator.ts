@@ -3,9 +3,13 @@ import { AgentResponse } from "../types/agent";
 import { describeAllTools, toolRegistry, validateArgs } from "./registry";
 import { startTrace, appendStep, endAndPersistTrace } from "../utils/traceLogger";
 import { v4 as uuidv4 } from "uuid";
-import { LLMUsage } from "../llm/provider.types";
+import { LLMUsage, StreamHandler } from "../llm/provider.types";
 
-export async function runAgent(userQuery: string, maxSteps = 5): Promise<AgentResponse> {
+export async function runAgent(
+  userQuery: string,
+  streamHandler: StreamHandler,
+  maxSteps = 5
+): Promise<AgentResponse> {
   let context = [];
   let finalAnswer = null;
   const requestId = uuidv4();
@@ -18,7 +22,10 @@ ${context.length ? `Previous context: ${JSON.stringify(context, null, 2)}` : ""}
 
 Decide next action:
 Respond in JSON:
-{ "action": "tool_name", "input": { "arg_1": "value_1", ... } | undefined } | { "action": "final_answer", "answer": "..." }`;
+{ "action": "tool_name", "input": { "arg_1": "value_1", ... } | undefined } | { "action": "final_answer", "answer": "..." }
+
+In case of action being final_answer, provide a well formatted markdown string as the answer.
+`;
 
     const instructions = `You are a reasoning agent. You can use these tools:\n${describeAllTools(toolRegistry.getEnabledTools())}`;
 
@@ -58,6 +65,8 @@ Respond in JSON:
       const args = decision.input;
       validateArgs(tool, args);
 
+      streamHandler.onData({ data: tool.getLoadingMessage(args), isInterstitialMessage: true });
+
       const toolResult = await tool.execute(args);
 
       const stepResult = {
@@ -89,6 +98,8 @@ Respond in JSON:
       throw err;
     }
   }
+
+  streamHandler.onData({ data: finalAnswer, isInterstitialMessage: false });
 
   trace.outcome = finalAnswer;
   endAndPersistTrace(trace);

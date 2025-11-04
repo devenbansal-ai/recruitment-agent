@@ -55,7 +55,7 @@ async function webSearch(args: IWebSearchArgs): Promise<ToolResult> {
   }
 }
 
-export const webSearchTool: Tool = {
+export const webSearchTool: Tool<IWebSearchArgs> = {
   name: "web_search",
   description: "Searches the web for the given query and returns top matches",
   argsSchema: {
@@ -63,4 +63,5 @@ export const webSearchTool: Tool = {
   },
   execute: webSearch,
   isEnabled: () => true,
+  getLoadingMessage: (args: IWebSearchArgs) => `Seaching the web for ${args.query}...`,
 };

@@ -1,4 +1,6 @@
 import { ResponseTextConfig } from "openai/resources/responses/responses";
+import { StreamMessage } from "../types/stream";
+import { TelemetryData } from "../utils/telemetry";
 
 export interface LLMResponse {
   text: string;
@@ -11,8 +13,8 @@ export type LLMUsage = {
 };
 
 export interface StreamHandler {
-  onData: (chunk: string) => void;
-  onEnd: () => void;
+  onData: (message: StreamMessage) => void;
+  onEnd: (telemetry?: TelemetryData) => void;
   onError?: (err: Error) => void;
 }
 

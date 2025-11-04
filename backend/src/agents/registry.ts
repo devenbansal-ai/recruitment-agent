@@ -12,10 +12,10 @@ export const TOOLS = [
 ];
 
 type ToolRegistry = {
-  tools: Tool[];
-  getEnabledTools: () => Tool[];
+  tools: Tool<any>[];
+  getEnabledTools: () => Tool<any>[];
   has: (name: string) => boolean;
-  get: (name: string) => Tool | undefined;
+  get: (name: string) => Tool<any> | undefined;
 };
 
 export const toolRegistry: ToolRegistry = {
@@ -32,7 +32,7 @@ export const toolRegistry: ToolRegistry = {
   },
 };
 
-export function decribeTool(tool: Tool): string {
+export function decribeTool(tool: Tool<any>): string {
   const argList = Object.entries(tool.argsSchema)
     .map(
       ([key, info]) =>
@@ -47,13 +47,13 @@ ${argList ? argList : "None"}
 ${tool.additionalInfo ? `Additional info: ${tool.additionalInfo()}` : ""}`;
 }
 
-export function describeAllTools(tools: Tool[]): string {
+export function describeAllTools(tools: Tool<any>[]): string {
   const toolsDescription = tools.map(decribeTool).join("\n\n");
 
   return toolsDescription;
 }
 
-export function validateArgs(tool: Tool, args: any) {
+export function validateArgs(tool: Tool<any>, args: any) {
   for (const [key, info] of Object.entries(tool.argsSchema)) {
     if (info.required && !(key in args)) throw new Error(`Missing required arg: ${key}`);
   }
