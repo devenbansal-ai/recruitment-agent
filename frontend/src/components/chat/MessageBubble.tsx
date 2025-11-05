@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import AssistantResponse from "./AssistantResponse";
+import { Paperclip } from "lucide-react";
 
 export default function MessageBubble({ m }: { m: Message }) {
   const isUser = m.role === "user";
@@ -36,8 +37,16 @@ export default function MessageBubble({ m }: { m: Message }) {
         ) : (
           <AssistantResponse message={m as AssistantMessage} />
         )}
+        {isUser && m.file && (
+          <div style={{ display: "inline-flex", alignItems: "center" }}>
+            <Paperclip height={10} width={20} />
+            <span style={{ fontSize: 10 }}>{m.file}</span>
+          </div>
+        )}
         {m.role === "assistant" && m.interstitialMessage && (
-          <div style={{ color: "#5f5f5f" }}>{m.interstitialMessage}</div>
+          <div style={{ color: "#5f5f5f", fontStyle: "italic", fontSize: 12 }}>
+            {m.interstitialMessage}
+          </div>
         )}
         {m.role === "assistant" && m.sources && m.sources.length > 0 && (
           <div className="mt-2 text-xs text-slate-500">

@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Send, Loader, Paperclip } from "lucide-react";
+import { Send, Loader } from "lucide-react";
 import clsx from "clsx";
-import { Message } from "@/types/chat";
+import { Message, UserMessage } from "@/types/chat";
 import { readResponseStream } from "@/utils/stream";
 import { API_URLS } from "@/api/urls";
 import { StreamCallback } from "@/types/stream";
@@ -11,6 +11,8 @@ import { BlankState } from "@/components/chat/BlankState";
 import MessageBubble from "@/components/chat/MessageBubble";
 import axios from "axios";
 import FileAttachButton from "@/components/chat/FileAttachButton";
+import { v4 as uuidv4 } from "uuid";
+import { UploadingOverlay } from "@/components/chat/UploadingOverlay";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -18,6 +20,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const assistantRef = useRef<HTMLDivElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [fileUploading, setFileUploading] = useState(false);
 
   const updateMessage = useCallback((id: string, patch: Partial<Message>) => {
     setMessages((prev) =>
@@ -42,10 +45,10 @@ export default function ChatPage() {
     assistantRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages]);
 
-  const startStream = async (query: string) => {
+  const startStream = async (message: UserMessage) => {
     setLoading(true);
 
-    const messageId = String(Date.now());
+    const messageId = uuidv4();
     setMessages((m) => [
       ...m,
       {
@@ -59,14 +62,13 @@ export default function ChatPage() {
     try {
       let fileName: string | undefined = undefined;
       if (file) {
-        fileName = await handleUpload(file);
         setFile(null);
       }
 
       const response = await fetch(API_URLS.AGENT_ASK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, file: file?.name }),
+        body: JSON.stringify({ query: message.content, file: message.file }),
       });
 
       const callback: StreamCallback = {
@@ -90,12 +92,22 @@ export default function ChatPage() {
   const handleSend = async () => {
     if (!input.trim()) return;
     const query = input.trim();
-    setMessages((m) => [
-      ...m,
-      { id: String(Date.now()), role: "user", content: query },
-    ]);
-    startStream(query);
+    const userMessage = {
+      id: uuidv4(),
+      role: "user",
+      content: query,
+      file: file?.name.toString(),
+    } as UserMessage;
+    setMessages((m) => [...m, userMessage]);
+    startStream(userMessage);
     setInput("");
+  };
+
+  const onFileSelect = async (file: File) => {
+    setFile(file);
+    setFileUploading(true);
+    await handleUpload(file);
+    setFileUploading(false);
   };
 
   return (
@@ -121,7 +133,6 @@ export default function ChatPage() {
       </div>
 
       <div className="flex-1 overflow-hidden flex">
-        {/* chat column */}
         <div className="flex-1 flex flex-col">
           <div className="flex-1 overflow-auto p-6 space-y-4">
             {messages.length === 0 ? <BlankState /> : null}
@@ -145,10 +156,7 @@ export default function ChatPage() {
                 className="flex flex-row gap-2"
                 style={{ height: "fit-content" }}
               >
-                <FileAttachButton
-                  file={file}
-                  onFileSelect={(file) => setFile(file)}
-                />
+                <FileAttachButton file={file} onFileSelect={onFileSelect} />
                 <button
                   onClick={handleSend}
                   className={clsx(
@@ -182,6 +190,7 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+      <UploadingOverlay isVisible={fileUploading} />
     </div>
   );
 }

@@ -14,6 +14,8 @@ export default function AssistantResponse({
   );
   const { content, sources, telemetry } = message;
 
+  let partIndex = 0;
+
   return (
     <div className="relative">
       <p className="whitespace-pre-wrap">
@@ -39,8 +41,10 @@ export default function AssistantResponse({
               return "";
             }
           }
+          partIndex++;
           return (
             <ReactMarkdown
+              key={partIndex}
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
             >

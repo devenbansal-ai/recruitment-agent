@@ -15,6 +15,7 @@ type BaseMessage = {
 export type UserMessage = BaseMessage & {
   role: "user";
   content: string;
+  file?: string;
 };
 
 export type AssistantMessage = BaseMessage & {
