@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.post("/ask", async (req, res) => {
   await limit(async () => {
-    const { query } = req.body;
+    const { query, file } = req.body;
     if (!query) return res.status(400).json({ error: "Missing query" });
 
     // Set headers for SSE (Server-Sent Events)
@@ -27,7 +27,7 @@ router.post("/ask", async (req, res) => {
     const streamHandler = getStreamHandler(res);
 
     try {
-      const response = await runAgent(query, streamHandler);
+      const response = await runAgent(query, streamHandler, file);
 
       const cost = estimateCost(llm.model, response.usage);
       Logger.log(LOGGER_TAGS.LLM_ESTIMATED_COST, `$${cost.toFixed(6)}`);

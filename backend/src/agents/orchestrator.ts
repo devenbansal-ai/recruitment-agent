@@ -9,6 +9,7 @@ import { CitationSource } from "../vector/provider.types";
 export async function runAgent(
   userQuery: string,
   streamHandler: StreamHandler,
+  file?: string,
   maxSteps = 5
 ): Promise<AgentResponse> {
   let context = [];
@@ -21,7 +22,7 @@ export async function runAgent(
   for (let step = 0; step < maxSteps; step++) {
     const prompt = `
 ## User query: 
-${userQuery}
+${userQuery}${file ? `, refer the document: ${file}` : ""}
 
 ${
   context.length
