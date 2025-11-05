@@ -28,7 +28,7 @@ export class PineconeVectorProvider implements VectorProvider {
     return chunks.length;
   }
 
-  async upsert(items: VectorItem[]): Promise<void> {
+  async upsert(items: VectorItem[], namespace?: string): Promise<void> {
     Logger.log(LOGGER_TAGS.UPSERT_ITEM_START);
 
     const vectors: PineconeRecord<RecordMetadata>[] = [];
@@ -41,7 +41,12 @@ export class PineconeVectorProvider implements VectorProvider {
         metadata: { ...item.metadata, content: item.text },
       });
     }
-    await this.index.upsert(vectors);
+
+    if (namespace) {
+      await this.index.namespace(namespace).upsert(vectors);
+    } else {
+      await this.index.upsert(vectors);
+    }
     Logger.log(`✅ Upserted ${vectors.length} vectors to Pinecone`);
 
     Logger.log(LOGGER_TAGS.UPSERT_ITEM_END);
@@ -57,13 +62,6 @@ export class PineconeVectorProvider implements VectorProvider {
       topK: params.topK ?? 3,
       includeMetadata: true,
     });
-
-    const context = results.matches
-      .map(
-        (match, i) =>
-          `[${i + 1}] ${match.metadata?.content}\n(Source: ${match.metadata?.source || "Unknown"})`
-      )
-      .join("\n\n");
 
     return results.matches.map((match) => {
       return {

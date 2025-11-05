@@ -1,20 +1,31 @@
 import { CitationSource, VectorResult } from "../vector/provider.types";
 
-export const getContextFromVectorResults = (results: VectorResult[]): string => {
-  return results
+export const getContextFromCitationSources = (sources: CitationSource[]): string => {
+  return sources
     .map(
-      (result, i) => `[${i + 1}] ${result.text}\n(Source: ${result.metadata?.source || "Unknown"})`
+      (source, i) =>
+        `[${i + 1}] ${source.snippet}\n(Source: ${source.url || source.title || "Unknown"})`
     )
     .join("\n\n");
 };
 
 export const getCitationSourcesFromVectorResults = (results: VectorResult[]): CitationSource[] => {
-  return results.map((result, i) => {
-    return {
-      id: i + 1,
-      snippet: result.text.slice(0, 300),
-      title: result.metadata?.source || "Unknown",
-      url: result.metadata?.url,
-    } as CitationSource;
+  const sourceCitationMap = new Map<string, CitationSource>();
+  let i = 0;
+  results.forEach((result) => {
+    const resultSource = (result.metadata?.source || "Unknown") as string;
+    if (sourceCitationMap.has(resultSource)) {
+      sourceCitationMap.get(resultSource)!.snippet += result.text;
+    } else {
+      sourceCitationMap.set(resultSource, {
+        id: i + 1,
+        snippet: result.text,
+        title: result.metadata?.source || "Unknown",
+        url: result.metadata?.url,
+      });
+      i++;
+    }
   });
+
+  return [...sourceCitationMap.values()];
 };

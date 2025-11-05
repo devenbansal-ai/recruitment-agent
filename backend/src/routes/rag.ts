@@ -6,7 +6,10 @@ import Logger from "../utils/logger";
 import { estimateCost } from "../utils/costTracker";
 import { LOGGER_TAGS } from "../utils/tags";
 import { getStreamHandler } from "../utils/stream";
-import { getCitationSourcesFromVectorResults, getContextFromVectorResults } from "../utils/vector";
+import {
+  getCitationSourcesFromVectorResults,
+  getContextFromCitationSources,
+} from "../utils/vector";
 import { Telemetry, TelemetryData } from "../utils/telemetry";
 import { limit } from "../utils/concurency";
 
@@ -40,8 +43,8 @@ router.post("/", async (req, res) => {
       // Query Pinecone
       const vectorSearchResults = await vector.query({ query, topK: 5 });
 
-      const context = getContextFromVectorResults(vectorSearchResults);
       const sources = getCitationSourcesFromVectorResults(vectorSearchResults);
+      const context = getContextFromCitationSources(sources);
 
       const userPrompt = `
     Question: ${query}
@@ -108,7 +111,8 @@ router.post("/stream", async (req, res) => {
       // Query Pinecone
       const vectorSearchResults = await vector.query({ query, topK: 5 });
 
-      const context = getContextFromVectorResults(vectorSearchResults);
+      const sources = getCitationSourcesFromVectorResults(vectorSearchResults);
+      const context = getContextFromCitationSources(sources);
 
       const prompt = `Use the context below to answer:\n${context}\n\nQuestion: ${query}`;
 

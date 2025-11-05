@@ -4,8 +4,9 @@ import Logger from "../../utils/logger";
 import { LOGGER_TAGS } from "../../utils/tags";
 import {
   getCitationSourcesFromVectorResults,
-  getContextFromVectorResults,
+  getContextFromCitationSources,
 } from "../../utils/vector";
+import { listDocuments } from "../../middleware/documentRegistry";
 
 interface IVectorSearchArgs extends ToolInput {
   query: string;
@@ -24,8 +25,8 @@ async function vectorSearch(args: IVectorSearchArgs): Promise<ToolResult> {
       filter: filter ?? undefined,
     });
 
-    const context = getContextFromVectorResults(vectorSearchResults);
     const sources = getCitationSourcesFromVectorResults(vectorSearchResults);
+    const context = getContextFromCitationSources(sources);
 
     return { success: true, output: { query, context }, sources };
   } catch (err: any) {
@@ -33,7 +34,7 @@ async function vectorSearch(args: IVectorSearchArgs): Promise<ToolResult> {
   }
 }
 
-const sources = ["Deven_Bansal_resume.pdf"];
+const sources = listDocuments();
 
 export const vectorSearchTool: Tool<IVectorSearchArgs> = {
   name: "vector_search",
@@ -43,8 +44,10 @@ export const vectorSearchTool: Tool<IVectorSearchArgs> = {
     topK: { type: "number", description: "Number of results to return", required: false },
   },
   additionalInfo: () =>
-    sources.length > 0 ? `Sources available for reference: ${sources.join(", ")}` : "",
+    sources.length > 0
+      ? `Sources available for reference: ${sources.map((source) => source.name).join(", ")}`
+      : "",
   execute: vectorSearch,
   isEnabled: () => true,
-  getLoadingMessage: (args) => `Searching the documents for ${args.query}`,
+  getLoadingMessage: (args) => `Searching the documents for ${args.query}...`,
 };
