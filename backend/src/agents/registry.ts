@@ -11,24 +11,24 @@ export const TOOLS = [
   vectorSearchTool,
 ];
 
+const disabled = process.env.DISABLED_TOOLS?.split(",") ?? [];
+export const ENABLED_TOOLS = TOOLS.filter(
+  (tool) => tool.isEnabled() && !disabled.includes(tool.name)
+);
+
 type ToolRegistry = {
   tools: Tool<any>[];
-  getEnabledTools: () => Tool<any>[];
   has: (name: string) => boolean;
   get: (name: string) => Tool<any> | undefined;
 };
 
 export const toolRegistry: ToolRegistry = {
-  tools: TOOLS,
-  getEnabledTools() {
-    const disabled = process.env.DISABLED_TOOLS?.split(",") ?? [];
-    return this.tools.filter((tool) => tool.isEnabled() && !disabled.includes(tool.name));
-  },
+  tools: ENABLED_TOOLS,
   has(name) {
-    return this.getEnabledTools().some((tool) => tool.name === name && tool.isEnabled());
+    return this.tools.some((tool) => tool.name === name && tool.isEnabled());
   },
   get(name) {
-    return this.getEnabledTools().find((tool) => tool.name === name && tool.isEnabled());
+    return this.tools.find((tool) => tool.name === name && tool.isEnabled());
   },
 };
 

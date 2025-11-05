@@ -1,22 +1,23 @@
 import { getJson } from "serpapi";
 import Logger from "../../utils/logger";
 import { LOGGER_TAGS } from "../../utils/tags";
-import { Tool, ToolInput, ToolResult } from "../../types/agent";
+import { CitationSource, Tool, ToolInput, ToolResult } from "../../types/agent";
+import { getContextFromCitationSources } from "../../utils/citations";
 
 const apiKey = process.env.SERPAPI_KEY!;
 
 interface IWebSearchArgs extends ToolInput {
   query: string;
+  sources?: CitationSource[];
 }
 
 async function webSearch(args: IWebSearchArgs): Promise<ToolResult> {
   Logger.log(LOGGER_TAGS.WEB_SEARCH_QUERY, args.query);
   const params = {
     q: args.query,
-    engine: "google", // or whichever engine you choose
+    engine: "google",
     hl: "en",
     gl: "us",
-    // you can add more parameters
   };
 
   try {
@@ -36,15 +37,16 @@ async function webSearch(args: IWebSearchArgs): Promise<ToolResult> {
       );
     });
 
-    // You can transform data into your action-output format
+    const sources = getCitationSourcesFromOrganicResults(
+      data["organic_results"] || [],
+      args.sources?.length || 0
+    );
+    const context = getContextFromCitationSources(sources);
+
     return {
       success: true,
-      output:
-        data["organic_results"].map((r: any) => ({
-          title: r.title,
-          link: r.link,
-          snippet: r.snippet,
-        })) ?? [],
+      output: context,
+      sources,
     };
   } catch (err) {
     Logger.log(LOGGER_TAGS.WEB_SEARCH_UNSUCCESSFUL);
@@ -55,9 +57,35 @@ async function webSearch(args: IWebSearchArgs): Promise<ToolResult> {
   }
 }
 
+function getCitationSourcesFromOrganicResults(
+  results: any[],
+  currentSourcesCount?: number
+): CitationSource[] {
+  const sourceCitationMap = new Map<string, CitationSource>();
+  let i = (currentSourcesCount ?? 0) + 1;
+  results.forEach((result) => {
+    const resultSource = (result.metadata?.link || "Unknown") as string;
+    if (sourceCitationMap.has(resultSource)) {
+      sourceCitationMap.get(resultSource)!.snippet += result.snippet;
+    } else {
+      sourceCitationMap.set(resultSource, {
+        id: i,
+        snippet: result.snippet,
+        title: result.title || "Unknown",
+        url: result.link,
+      });
+      i++;
+    }
+  });
+
+  return [...sourceCitationMap.values()];
+}
+
 export const webSearchTool: Tool<IWebSearchArgs> = {
   name: "web_search",
-  description: "Searches the web for the given query and returns top matches",
+  description: `Use this to search for recent information or job postings online.
+    Input: { "query": "the search query string" }
+    Output: relevant search results (title, snippet, link).`,
   argsSchema: {
     query: { type: "string", description: "The query to search the web for.", required: true },
   },

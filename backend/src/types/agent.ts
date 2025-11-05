@@ -1,5 +1,11 @@
 import { LLMUsage } from "../llm/provider.types";
-import { CitationSource } from "../vector/provider.types";
+
+export interface CitationSource {
+  id: number;
+  title: string;
+  url?: string;
+  snippet: string;
+}
 
 export type Tool<T> = {
   name: string;

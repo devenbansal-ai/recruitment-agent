@@ -1,10 +1,9 @@
 import { llm } from "../llm";
-import { AgentResponse } from "../types/agent";
-import { describeAllTools, toolRegistry, validateArgs } from "./registry";
+import { AgentResponse, CitationSource } from "../types/agent";
+import { decribeTool, describeAllTools, toolRegistry, validateArgs } from "./registry";
 import { startTrace, appendStep, endAndPersistTrace } from "../utils/traceLogger";
 import { v4 as uuidv4 } from "uuid";
 import { LLMUsage, StreamHandler } from "../llm/provider.types";
-import { CitationSource } from "../vector/provider.types";
 
 export async function runAgent(
   userQuery: string,
@@ -32,16 +31,23 @@ ${
 }
 
 ## Decide the next action: one of the tools or final_answer
+
+## Scenarios:
+When asked to find suitable job opportunities, you should:
+1. Use vector_search to extract relevant skills, experience, and job roles from the resume.
+2. Then, use web_search to find active job postings in India that match these skills.
+3. Summarize top results with job titles and links.
+
 ## Respond in JSON:
 { "action": "tool_name", "input": { "arg_1": "value_1", ... } | undefined } | { "action": "final_answer", "answer": "..." }
 
 ## Rules
 - In case of action being final_answer, provide a well formatted markdown string as the answer.
-- In case of documents refered from vector search:
-  Each retrieved document is prefixed by a number in square brackets [1], [2], etc. When you write the final answer, cite sources inline using their numbers, like this: [1][3]. If multiple sources support the same fact, cite all of them.
+- In case of documents refered from vector search or results from a web search:
+  Each retrieved document or search result is prefixed by a number in square brackets [1], [2], etc. When you write the final answer, cite sources inline using their numbers, like this: [1][3]. If multiple sources support the same fact, cite all of them.
 `;
 
-    const instructions = `You are a reasoning agent. You can use these tools:\n${describeAllTools(toolRegistry.getEnabledTools())}`;
+    const instructions = `You are a reasoning agent. You can use these tools:\n${describeAllTools(toolRegistry.tools)}`;
 
     let decision;
 
@@ -81,7 +87,7 @@ ${
 
       streamHandler.onData({ data: tool.getLoadingMessage(args), isInterstitialMessage: true });
 
-      const toolResult = await tool.execute(args);
+      const toolResult = await tool.execute({ ...args, sources });
 
       const toolSources = toolResult.sources || [];
       sources.push(...toolSources);
@@ -89,6 +95,7 @@ ${
       const stepResult = {
         step: step + 1,
         timestamp: new Date().toISOString(),
+        toolDescription: decribeTool(tool),
         toolResult,
       };
       appendStep(trace, stepResult);
@@ -116,7 +123,8 @@ ${
     }
   }
 
-  streamHandler.onData({ data: finalAnswer, isInterstitialMessage: false, sources: sources });
+  const sortedSources = sources.sort((s_1, s_2) => s_1.id - s_2.id);
+  streamHandler.onData({ data: finalAnswer, isInterstitialMessage: false, sources: sortedSources });
 
   trace.outcome = finalAnswer;
   endAndPersistTrace(trace);

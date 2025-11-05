@@ -1,17 +1,16 @@
 import { vector } from "../../vector";
-import { Tool, ToolInput, ToolResult } from "../../types/agent.js";
+import { CitationSource, Tool, ToolInput, ToolResult } from "../../types/agent.js";
 import Logger from "../../utils/logger";
 import { LOGGER_TAGS } from "../../utils/tags";
-import {
-  getCitationSourcesFromVectorResults,
-  getContextFromCitationSources,
-} from "../../utils/vector";
+import { getCitationSourcesFromVectorResults } from "../../utils/vector";
 import { listDocuments } from "../../middleware/documentRegistry";
+import { getContextFromCitationSources } from "../../utils/citations";
 
 interface IVectorSearchArgs extends ToolInput {
   query: string;
   topK?: number;
   filter?: Record<string, any>;
+  sources?: CitationSource[];
 }
 
 async function vectorSearch(args: IVectorSearchArgs): Promise<ToolResult> {
@@ -25,10 +24,13 @@ async function vectorSearch(args: IVectorSearchArgs): Promise<ToolResult> {
       filter: filter ?? undefined,
     });
 
-    const sources = getCitationSourcesFromVectorResults(vectorSearchResults);
+    const sources = getCitationSourcesFromVectorResults(
+      vectorSearchResults,
+      args.sources?.length || 0
+    );
     const context = getContextFromCitationSources(sources);
 
-    return { success: true, output: { query, context }, sources };
+    return { success: true, output: context, sources };
   } catch (err: any) {
     return { success: false, error: err?.message ?? String(err) };
   }
@@ -38,15 +40,17 @@ const sources = listDocuments();
 
 export const vectorSearchTool: Tool<IVectorSearchArgs> = {
   name: "vector_search",
-  description: "Searches the vector for the given query and returns top matches",
+  description: `Use this to retrieve information from uploaded documents such as resumes.
+    Input: { "query": "string describing what you want to know" }
+    Output: relevant text snippets from the document.`,
   argsSchema: {
     query: { type: "string", description: "Search query text", required: true },
     topK: { type: "number", description: "Number of results to return", required: false },
   },
-  additionalInfo: () =>
+  additionalInfo:
     sources.length > 0
-      ? `Sources available for reference: ${sources.map((source) => source.name).join(", ")}`
-      : "",
+      ? () => `Sources available for reference: ${sources.map((source) => source.name).join(", ")}`
+      : undefined,
   execute: vectorSearch,
   isEnabled: () => true,
   getLoadingMessage: (args) => `Searching the documents for ${args.query}...`,

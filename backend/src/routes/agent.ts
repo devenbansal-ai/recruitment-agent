@@ -56,7 +56,7 @@ router.post("/retry", async (req, res) => {
 });
 
 router.get("/tools", async (req, res) => {
-  res.json({ tools: describeAllTools(toolRegistry.getEnabledTools()) });
+  res.json({ tools: describeAllTools(toolRegistry.tools) });
 });
 
 export default router;

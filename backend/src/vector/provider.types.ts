@@ -23,10 +23,3 @@ export interface VectorProvider {
   ingest(text: string, source: string, pageNumber?: number): Promise<number>;
   query(params: QueryParams): Promise<VectorResult[]>;
 }
-
-export interface CitationSource {
-  id: number;
-  title: string;
-  url?: string;
-  snippet: string;
-}

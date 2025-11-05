@@ -6,12 +6,10 @@ import Logger from "../utils/logger";
 import { estimateCost } from "../utils/costTracker";
 import { LOGGER_TAGS } from "../utils/tags";
 import { getStreamHandler } from "../utils/stream";
-import {
-  getCitationSourcesFromVectorResults,
-  getContextFromCitationSources,
-} from "../utils/vector";
+import { getCitationSourcesFromVectorResults } from "../utils/vector";
 import { Telemetry, TelemetryData } from "../utils/telemetry";
 import { limit } from "../utils/concurency";
+import { getContextFromCitationSources } from "../utils/citations";
 
 const router = express.Router();
 const RAG_INSTRUCTIONS = `You are a helpful assistant using retrieved documents to answer questions.
