@@ -1,4 +1,4 @@
-import { TelemetryData } from "@/types/chat";
+import { TelemetryData } from "@/types/telemetry";
 import { StreamCallback } from "@/types/stream";
 
 export async function readResponseStream(
@@ -48,7 +48,7 @@ export async function readResponseStream(
           if (message.isInterstitialMessage) {
             callback.onInterstitialMessage(messageId, message.data);
           } else {
-            callback.onData(messageId, message.data);
+            callback.onData(messageId, message.data, message.sources);
           }
         } catch (err) {
           console.warn("Non-JSON chunk:", line);

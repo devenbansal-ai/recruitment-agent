@@ -1,3 +1,5 @@
+import { TelemetryData } from "./telemetry";
+
 export type CitationSource = {
   id: number;
   snippet: string;
@@ -13,16 +15,6 @@ type BaseMessage = {
 export type UserMessage = BaseMessage & {
   role: "user";
   content: string;
-};
-
-export type TelemetryData = {
-  route: string;
-  startTime: number;
-  endTime?: number;
-  latencyMs?: number;
-  tokensIn?: number;
-  tokensOut?: number;
-  totalCostUsd?: number;
 };
 
 export type AssistantMessage = BaseMessage & {

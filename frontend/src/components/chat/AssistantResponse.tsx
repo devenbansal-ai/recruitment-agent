@@ -1,5 +1,8 @@
 import { AssistantMessage, CitationSource } from "@/types/chat";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
 
 export default function AssistantResponse({
   message,
@@ -36,7 +39,14 @@ export default function AssistantResponse({
               return "";
             }
           }
-          return part;
+          return (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+            >
+              {part}
+            </ReactMarkdown>
+          );
         })}
       </p>
       {telemetry && (

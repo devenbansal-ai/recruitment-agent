@@ -10,12 +10,6 @@ export function BlankState() {
         documents, search the web if necessary, and provide a grounded answer
         with clickable sources.
       </p>
-      <div className="mt-6 flex gap-3">
-        <button className="px-4 py-2 rounded bg-blue-600 text-white">
-          Upload resume
-        </button>
-        <button className="px-4 py-2 rounded border">View sample query</button>
-      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Send, Loader } from "lucide-react";
+import { Send, Loader, Paperclip } from "lucide-react";
 import clsx from "clsx";
 import { Message } from "@/types/chat";
 import { readResponseStream } from "@/utils/stream";
@@ -9,12 +9,15 @@ import { API_URLS } from "@/api/urls";
 import { StreamCallback } from "@/types/stream";
 import { BlankState } from "@/components/chat/BlankState";
 import MessageBubble from "@/components/chat/MessageBubble";
+import axios from "axios";
+import FileAttachButton from "@/components/chat/FileAttachButton";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const assistantRef = useRef<HTMLDivElement | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   const updateMessage = useCallback((id: string, patch: Partial<Message>) => {
     setMessages((prev) =>
@@ -22,12 +25,26 @@ export default function ChatPage() {
     );
   }, []);
 
+  const handleUpload = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await axios.post(API_URLS.UPLOAD, formData);
+      console.log(res.data);
+      return res.data.name;
+    } catch (err) {
+      console.log("Error uploading file");
+      throw err;
+    }
+  };
+
   useEffect(() => {
     assistantRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages]);
 
   const startStream = async (query: string) => {
     setLoading(true);
+
     const messageId = String(Date.now());
     setMessages((m) => [
       ...m,
@@ -40,22 +57,29 @@ export default function ChatPage() {
     ]);
 
     try {
+      let fileName: string | undefined = undefined;
+      if (file) {
+        fileName = await handleUpload(file);
+        setFile(null);
+      }
+
       const response = await fetch(API_URLS.AGENT_ASK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, file: file?.name }),
       });
 
       const callback: StreamCallback = {
-        onData: (messageId: string, data: string) =>
+        onData: (messageId, data, sources) =>
           updateMessage(messageId, {
             content: data,
             interstitialMessage: undefined,
+            sources,
           }),
-        onInterstitialMessage: (messageId: string, data: string) =>
+        onInterstitialMessage: (messageId, data) =>
           updateMessage(messageId, { interstitialMessage: data }),
         onDone: () => setLoading(false),
-        onError: (messageId: string, error) =>
+        onError: (messageId, error) =>
           updateMessage(messageId, { content: String(error) }),
       };
 
@@ -109,7 +133,7 @@ export default function ChatPage() {
           </div>
 
           <div className="p-4 border-t bg-white">
-            <div className="flex gap-3">
+            <div className="flex gap-3" style={{ alignItems: "end" }}>
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -117,8 +141,14 @@ export default function ChatPage() {
                 className="flex-1 border rounded p-3 resize-none h-14"
                 disabled={loading}
               />
-
-              <div className="flex flex-col gap-2">
+              <div
+                className="flex flex-row gap-2"
+                style={{ height: "fit-content" }}
+              >
+                <FileAttachButton
+                  file={file}
+                  onFileSelect={(file) => setFile(file)}
+                />
                 <button
                   onClick={handleSend}
                   className={clsx(

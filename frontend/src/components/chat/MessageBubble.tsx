@@ -1,8 +1,9 @@
-import { Message } from "@/types/chat";
+import { AssistantMessage, Message } from "@/types/chat";
 import clsx from "clsx";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
+import AssistantResponse from "./AssistantResponse";
 
 export default function MessageBubble({ m }: { m: Message }) {
   const isUser = m.role === "user";
@@ -23,7 +24,7 @@ export default function MessageBubble({ m }: { m: Message }) {
             : "bg-white text-slate-800 rounded-bl-none shadow-sm"
         )}
       >
-        {m.content.trim() && (
+        {m.content.trim() && isUser ? (
           <div className="whitespace-pre-wrap">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
@@ -32,6 +33,8 @@ export default function MessageBubble({ m }: { m: Message }) {
               {m.content.trim()}
             </ReactMarkdown>
           </div>
+        ) : (
+          <AssistantResponse message={m as AssistantMessage} />
         )}
         {m.role === "assistant" && m.interstitialMessage && (
           <div style={{ color: "#5f5f5f" }}>{m.interstitialMessage}</div>
