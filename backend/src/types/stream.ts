@@ -1,4 +1,4 @@
-import { CitationSource } from "../vector/provider.types";
+import { CitationSource } from "./agent";
 
 export type StreamMessage = {
   data: string;
