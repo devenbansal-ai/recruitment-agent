@@ -1,6 +1,7 @@
 import { ResponseTextConfig } from "openai/resources/responses/responses";
 import { StreamMessage } from "../types/stream";
 import { TelemetryData } from "../utils/telemetry";
+import { CitationSource } from "../types/agent";
 
 export interface LLMResponse {
   text: string;
@@ -12,10 +13,18 @@ export type LLMUsage = {
   output_tokens: number;
 };
 
+export enum StreamState {
+  Streaming = "streaming",
+  Done = "done",
+  Error = "error",
+}
+
 export interface StreamHandler {
   onData: (message: StreamMessage) => void;
   onEnd: (telemetry?: TelemetryData) => void;
+  onSources: (sources: CitationSource[]) => void;
   onError?: (err: Error) => void;
+  state: StreamState;
 }
 
 export type LLMResponseOptions = {

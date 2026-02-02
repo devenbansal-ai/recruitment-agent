@@ -32,19 +32,25 @@ export const toolRegistry: ToolRegistry = {
   },
 };
 
-export function decribeTool(tool: Tool<any>): string {
-  const argList = Object.entries(tool.argsSchema)
+function getArgumentsDescription(argsSchema?: {
+  [argName: string]: { type: string; description: string; required?: boolean };
+}): string {
+  if (!argsSchema) return "";
+  const argList = Object.entries(argsSchema)
     .map(
       ([key, info]) =>
         `- ${key} (${info.type})${info.required ? " [required]" : ""}: ${info.description}`
     )
     .join("\n");
 
+  return `####Arguments:\n${argList}`;
+}
+
+export function decribeTool(tool: Tool<any>): string {
   return `### ${tool.name}
-Description: ${tool.description}
-Arguments:
-${argList ? argList : "None"}
-${tool.additionalInfo ? `Additional info: ${tool.additionalInfo()}` : ""}`;
+#### Description: ${tool.description}
+${getArgumentsDescription(tool.argsSchema)}
+${tool.additionalInfo ? `#### Additional info: ${tool.additionalInfo()}` : ""}`;
 }
 
 export function describeAllTools(tools: Tool<any>[]): string {
@@ -54,7 +60,7 @@ export function describeAllTools(tools: Tool<any>[]): string {
 }
 
 export function validateArgs(tool: Tool<any>, args: any) {
-  for (const [key, info] of Object.entries(tool.argsSchema)) {
+  for (const [key, info] of Object.entries(tool.argsSchema || {})) {
     if (info.required && !(key in args)) throw new Error(`Missing required arg: ${key}`);
   }
 }

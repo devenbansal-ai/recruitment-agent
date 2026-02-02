@@ -3,7 +3,8 @@ import { TelemetryData } from "./telemetry";
 
 export type StreamCallback = {
   onInterstitialMessage: (messageId: string, data: string) => void;
-  onData: (messageId: string, data: string, sources: CitationSource[]) => void;
+  onData: (messageId: string, data: string) => void;
   onDone: (messageId: string, telemetry?: TelemetryData) => void;
   onError: (messageId: string, error: any) => void;
+  onSources: (messageId: string, sources: CitationSource[]) => void;
 };

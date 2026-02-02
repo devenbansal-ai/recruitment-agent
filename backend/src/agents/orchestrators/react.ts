@@ -1,59 +1,37 @@
-import { llm } from "../llm";
-import { AgentResponse, CitationSource } from "../types/agent";
-import { decribeTool, describeAllTools, toolRegistry, validateArgs } from "./registry";
-import { startTrace, appendStep, endAndPersistTrace } from "../utils/traceLogger";
+import { llm } from "../../llm";
+import { AgentAction, AgentContext, AgentResponse, CitationSource } from "../../types/agent";
+import { decribeTool, describeAllTools, toolRegistry, validateArgs } from "../registry";
+import { startTrace, appendStep, endAndPersistTrace } from "../../utils/traceLogger";
 import { v4 as uuidv4 } from "uuid";
-import { LLMUsage, StreamHandler } from "../llm/provider.types";
+import { LLMUsage, StreamHandler } from "../../llm/provider.types";
+import { appPrompts, createPrompt } from "../prompts";
+import { appStrings } from "../../common/strings";
 
-export async function runAgent(
+export async function runReActAgent(
   userQuery: string,
   streamHandler: StreamHandler,
   file?: string,
   maxSteps = 5
 ): Promise<AgentResponse> {
-  let context = [];
+  const agentContext: AgentContext = { steps: [] };
   const sources: CitationSource[] = [];
-  let finalAnswer = null;
+  let finalAnswer: string | null = null;
   const requestId = uuidv4();
   const trace = startTrace(requestId, userQuery);
   const usage: LLMUsage = { input_tokens: 0, output_tokens: 0 };
 
   for (let step = 0; step < maxSteps; step++) {
-    const prompt = `
-## User query: 
-${userQuery}${file ? `, refer the document: ${file}` : ""}
+    let prompt = createPrompt(userQuery, file, agentContext.steps);
+    prompt += `\n\n${appPrompts.toolOrchestration}`;
+    prompt += `\n\n${appPrompts.rules}`;
 
-${
-  context.length
-    ? `## Previous context: ${JSON.stringify(context, null, 2)}
-`
-    : ""
-}
-
-## Decide the next action: one of the tools or final_answer
-
-## Scenarios:
-When asked to find suitable job opportunities, you should:
-1. Use vector_search to extract relevant skills, experience, and job roles from the resume.
-2. Then, use web_search to find active job postings in India that match these skills.
-3. Summarize top results with job titles and links.
-
-## Respond in JSON:
-{ "action": "tool_name", "input": { "arg_1": "value_1", ... } | undefined } | { "action": "final_answer", "answer": "..." }
-
-## Rules
-- In case of action being final_answer, provide a well formatted markdown string as the answer.
-- In case of documents refered from vector search or results from a web search:
-  Each retrieved document or search result is prefixed by a number in square brackets [1], [2], etc. When you write the final answer, cite sources inline using their numbers, like this: [1][3]. If multiple sources support the same fact, cite all of them.
-`;
-
-    const instructions = `You are a reasoning agent. You can use these tools:\n${describeAllTools(toolRegistry.tools)}`;
+    const instructions = `You are a reasoning agent. You can use these tools:\n${describeAllTools(toolRegistry.tools)}. When asked to describe the tools available to you or your capabilities, respond with a single paragraph summarizing the tools' capabilities.`;
 
     let decision;
 
     try {
       const response = await llm.generate(prompt, {
-        temperature: 0.2,
+        temperature: 0.1,
         responseTextFormat: { format: { type: "json_object" } },
         instructions,
       });
@@ -70,10 +48,13 @@ When asked to find suitable job opportunities, you should:
       };
       appendStep(trace, agentStep);
 
-      decision = JSON.parse(response.text);
+      decision = JSON.parse(response.text) as AgentAction;
 
-      if (decision.action === "final_answer") {
-        finalAnswer = decision.answer;
+      if (decision.action === appStrings.agentFinalAnswerActionName) {
+        if (!decision.answer) {
+          throw new Error("Agent provided final answer action without an answer");
+        }
+        finalAnswer = decision.answer as string;
         break;
       }
 
@@ -104,7 +85,7 @@ When asked to find suitable job opportunities, you should:
         throw new Error(`Tool ${tool.name} failed with error: ${toolResult.error}`);
       }
 
-      context.push({
+      agentContext.steps.push({
         step: step + 1,
         tool: decision.action,
         input: decision.input,
@@ -123,10 +104,15 @@ When asked to find suitable job opportunities, you should:
     }
   }
 
+  if (!finalAnswer) {
+    throw new Error("Agent did not provide a final answer");
+  }
+
   const sortedSources = sources.sort((s_1, s_2) => s_1.id - s_2.id);
-  streamHandler.onData({ data: finalAnswer, isInterstitialMessage: false, sources: sortedSources });
+  streamHandler.onData({ data: finalAnswer, isInterstitialMessage: false });
+  streamHandler.onSources(sortedSources);
 
   trace.outcome = finalAnswer;
   endAndPersistTrace(trace);
-  return { output: finalAnswer, trace: context, usage };
+  return { trace: agentContext.steps, usage };
 }

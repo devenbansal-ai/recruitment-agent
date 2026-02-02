@@ -114,9 +114,11 @@ router.post("/stream", async (req, res) => {
 
       const prompt = `Use the context below to answer:\n${context}\n\nQuestion: ${query}`;
 
-      await llm.stream(prompt, getStreamHandler(res), {
+      const streamHandler = getStreamHandler(res);
+      await llm.stream(prompt, streamHandler, {
         instructions: RAG_INSTRUCTIONS,
       });
+      streamHandler.onEnd();
     } catch (err) {
       console.error("RAG error:", err);
       res.status(500).json({ error: "RAG retrieval failed" });

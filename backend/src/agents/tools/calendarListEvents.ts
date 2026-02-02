@@ -27,7 +27,6 @@ async function listEvents(_args: ICalendarListEventsArgs): Promise<ToolResult> {
 export const calendarListEventsTool: Tool<ICalendarListEventsArgs> = {
   name: "calendar_list_events",
   description: "Fetches and returns upcoming 10 events starting from now",
-  argsSchema: {},
   execute: listEvents,
   additionalInfo: () => `Current data and time is ${new Date().toString()}`,
   isEnabled: () => true,

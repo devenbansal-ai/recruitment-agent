@@ -1,5 +1,5 @@
 import { ToolAction, ToolResult } from "../types/agent";
-import { validateAction } from "./actionValidator";
+import { validateAction } from "./validator";
 import { toolRegistry } from "./registry";
 
 export async function executeAction(action: ToolAction): Promise<ToolResult> {

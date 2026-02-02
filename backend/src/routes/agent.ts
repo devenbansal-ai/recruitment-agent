@@ -1,5 +1,5 @@
 import express from "express";
-import { runAgent } from "../agents/orchestrator";
+import { runPlannerAgent } from "../agents/orchestrators/planner";
 import { LOGGER_TAGS } from "../utils/tags";
 import { estimateCost } from "../utils/costTracker";
 import { llm } from "../llm";
@@ -27,7 +27,7 @@ router.post("/ask", async (req, res) => {
     const streamHandler = getStreamHandler(res);
 
     try {
-      const response = await runAgent(query, streamHandler, file);
+      const response = await runPlannerAgent(query, streamHandler, file);
 
       const cost = estimateCost(llm.model, response.usage);
       Logger.log(LOGGER_TAGS.LLM_ESTIMATED_COST, `$${cost.toFixed(6)}`);

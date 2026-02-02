@@ -10,7 +10,7 @@ export interface CitationSource {
 export type Tool<T> = {
   name: string;
   description: string;
-  argsSchema: { [argName: string]: { type: string; description: string; required?: boolean } };
+  argsSchema?: { [argName: string]: { type: string; description: string; required?: boolean } };
   execute: (args: T) => Promise<ToolResult> | ToolResult;
   additionalInfo?: () => string;
   isEnabled: () => boolean;
@@ -34,26 +34,24 @@ export type ToolResult = {
   error?: string;
 };
 
-export type AgentStep = {
-  step: number;
-  timestamp: string;
-  action?: ToolAction;
-  result?: ToolResult;
-  note?: string;
-};
-
-export type AgentTrace = {
-  requestId: string;
-  prompt: string;
-  startTime: string;
-  endTime?: string;
-  steps: AgentStep[];
-  outcome?: string;
-  meta?: Record<string, any>;
-};
-
 export type AgentResponse = {
-  output: string;
-  trace: any;
+  trace: AgentStepItem[];
   usage: LLMUsage;
+};
+
+export type AgentStepItem = ToolResult & {
+  step: number;
+  tool: string;
+  input: ToolInput;
+};
+
+export type AgentContext = {
+  steps: AgentStepItem[];
+};
+
+export type AgentAction = {
+  action: string;
+  input: ToolInput;
+  answer?: string;
+  is_last_tool?: boolean;
 };

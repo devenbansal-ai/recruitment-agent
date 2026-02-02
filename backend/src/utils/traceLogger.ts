@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AgentTrace } from "../types/agent";
+import { AgentTrace } from "../types/telemetry";
 
 const TRACE_DIR = path.resolve(process.cwd(), "traces");
 if (!fs.existsSync(TRACE_DIR)) fs.mkdirSync(TRACE_DIR, { recursive: true });

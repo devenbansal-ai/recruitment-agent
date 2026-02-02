@@ -66,7 +66,6 @@ export class OpenAIProvider implements LLMProvider {
           }
         }
       }
-      handler.onEnd();
     } catch (err) {
       if (handler.onError) handler.onError(err as Error);
     }

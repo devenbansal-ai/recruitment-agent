@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Send, Loader } from "lucide-react";
 import clsx from "clsx";
-import { Message, UserMessage } from "@/types/chat";
+import { AssistantMessage, Message, UserMessage } from "@/types/chat";
 import { readResponseStream } from "@/utils/stream";
 import { API_URLS } from "@/api/urls";
 import { StreamCallback } from "@/types/stream";
@@ -13,6 +13,7 @@ import axios from "axios";
 import FileAttachButton from "@/components/chat/FileAttachButton";
 import { v4 as uuidv4 } from "uuid";
 import { UploadingOverlay } from "@/components/chat/UploadingOverlay";
+import { appStrings } from "@/common/strings";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,9 +23,43 @@ export default function ChatPage() {
   const [file, setFile] = useState<File | null>(null);
   const [fileUploading, setFileUploading] = useState(false);
 
+  useEffect(() => {
+    // Render the welcome message, as a streaming message
+    const welcomeMessageId = uuidv4();
+    setMessages([
+      {
+        role: "assistant",
+        id: welcomeMessageId,
+        content: "",
+        interstitialMessage: "...",
+      },
+    ]);
+
+    // Loop through the words of welcome message and update welcome message
+    const words = appStrings.welcomeMessage.split(" ");
+    const initialInterval = 200;
+    const streamingInterval = 100;
+    for (let i = 0; i < words.length; i++) {
+      setTimeout(
+        () => {
+          updateMessage(welcomeMessageId, {
+            content: words.slice(0, i + 1).join(" "),
+          });
+        },
+        i * streamingInterval + initialInterval,
+      );
+    }
+  }, []);
+
   const updateMessage = useCallback((id: string, patch: Partial<Message>) => {
     setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, ...patch } : m))
+      prev.map((m) => (m.id === id ? { ...m, ...patch } : m)),
+    );
+  }, []);
+
+  const addToMessage = useCallback((id: string, data: string) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, content: m.content + data } : m)),
     );
   }, []);
 
@@ -49,18 +84,15 @@ export default function ChatPage() {
     setLoading(true);
 
     const messageId = uuidv4();
-    setMessages((m) => [
-      ...m,
-      {
-        id: messageId,
-        role: "assistant",
-        content: "",
-        interstitialMessage: "...",
-      },
-    ]);
+    const newMessage: AssistantMessage = {
+      role: "assistant",
+      id: messageId,
+      content: "",
+      interstitialMessage: "...",
+    };
+    setMessages((m) => [...m, newMessage]);
 
     try {
-      let fileName: string | undefined = undefined;
       if (file) {
         setFile(null);
       }
@@ -72,10 +104,9 @@ export default function ChatPage() {
       });
 
       const callback: StreamCallback = {
-        onData: (messageId, data, sources) =>
+        onData: (messageId, data) => addToMessage(messageId, data),
+        onSources: (messageId, sources) =>
           updateMessage(messageId, {
-            content: data,
-            interstitialMessage: undefined,
             sources,
           }),
         onInterstitialMessage: (messageId, data) =>
@@ -124,7 +155,7 @@ export default function ChatPage() {
               "px-2 py-1 rounded text-xs",
               loading
                 ? "bg-yellow-100 text-yellow-700"
-                : "bg-green-100 text-green-700"
+                : "bg-green-100 text-green-700",
             )}
           >
             {loading ? "Processing..." : "Idle"}
@@ -163,7 +194,7 @@ export default function ChatPage() {
                     "px-4 py-2 rounded flex items-center gap-2",
                     loading
                       ? "bg-slate-300 text-slate-700"
-                      : "bg-blue-600 text-white"
+                      : "bg-blue-600 text-white",
                   )}
                   disabled={loading}
                 >
