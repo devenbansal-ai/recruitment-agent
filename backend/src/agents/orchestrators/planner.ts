@@ -72,11 +72,11 @@ export async function runPlannerAgent(
       stepCount++;
       if (action === appStrings.agentFinalAnswerActionName) {
         const prompt = createPrompt(userQuery, file, agentContext.steps);
-        await llm.stream(prompt, streamHandler);
+        const instructions = `The planner has decided to provide a final answer, post accessing the following tools available: ${describeAllTools(toolRegistry.tools)}`;
+        await llm.stream(prompt, streamHandler, { instructions });
         const sortedSources = sources.sort((s_1, s_2) => s_1.id - s_2.id);
         streamHandler.onSources(sortedSources);
         endAndPersistTrace(trace);
-        streamHandler.onEnd();
         break;
       }
       const tool = toolRegistry.get(action);

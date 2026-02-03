@@ -12,11 +12,6 @@ interface IWebSearchArgs extends ToolInput {
 }
 
 async function webSearch(args: IWebSearchArgs): Promise<ToolResult> {
-  return {
-    success: true,
-    output: "web search complete for " + args.query,
-    sources: [],
-  };
   Logger.log(LOGGER_TAGS.WEB_SEARCH_QUERY, args.query);
   const params = {
     q: args.query,
