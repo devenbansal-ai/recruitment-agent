@@ -61,7 +61,13 @@ export default function ChatPage() {
     if (data) {
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === id ? { ...m, content: m.content + data } : m,
+          m.id === id
+            ? {
+                ...m,
+                content: m.content + data,
+                interstitialMessage: undefined,
+              }
+            : m,
         ),
       );
     }
