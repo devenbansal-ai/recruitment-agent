@@ -58,9 +58,13 @@ export default function ChatPage() {
   }, []);
 
   const addToMessage = useCallback((id: string, data: string) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, content: m.content + data } : m)),
-    );
+    if (data) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === id ? { ...m, content: m.content + data } : m,
+        ),
+      );
+    }
   }, []);
 
   const handleUpload = async (file: File): Promise<string> => {
@@ -182,6 +186,14 @@ export default function ChatPage() {
                 placeholder="Ask something — e.g., 'Summarize my resume and suggest top-fit roles'"
                 className="flex-1 border rounded p-3 resize-none h-14"
                 disabled={loading}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault(); // stop newline
+                    if (!loading && input.trim()) {
+                      handleSend();
+                    }
+                  }
+                }}
               />
               <div
                 className="flex flex-row gap-2"
