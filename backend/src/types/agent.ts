@@ -7,7 +7,7 @@ export interface CitationSource {
   snippet: string;
 }
 
-export type Tool<T> = {
+export type Tool<T extends ToolInput = ToolInput> = {
   name: string;
   description: string;
   argsSchema?: { [argName: string]: { type: string; description: string; required?: boolean } };

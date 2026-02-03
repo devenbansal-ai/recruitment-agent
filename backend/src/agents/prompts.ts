@@ -1,8 +1,21 @@
-import { tool } from "langchain";
 import { appStrings } from "../common/strings";
-import { AgentStepItem } from "../types/agent";
+import { AgentStepItem, Tool } from "../types/agent";
+import { InstructionsOptions } from "../types/prompt";
+import { describeAllTools } from "./registry";
 
-export function createPrompt(query: string, file?: string, steps?: AgentStepItem[]) {
+/**
+ * Creates a prompt for the LLM to answer the user query
+ * @param query User query
+ * @param file Document file
+ * @param steps Previous context
+ * @returns Prompt for the LLM to answer the user query
+ */
+export function createPrompt(
+  query: string,
+  file?: string,
+  steps?: AgentStepItem[],
+  rules?: string
+) {
   let prompt = `## User query:\n${query}`;
 
   if (file) {
@@ -11,6 +24,10 @@ export function createPrompt(query: string, file?: string, steps?: AgentStepItem
 
   if (steps?.length) {
     prompt += `\n\n## Previous context:\n${JSON.stringify(steps, null, 2)}`;
+  }
+
+  if (rules) {
+    prompt += `\n\n## Rules:\n${rules}`;
   }
 
   return prompt;
@@ -43,9 +60,24 @@ When asked to schedule an interview / test in the calendar, you should:
 
 ## Respond in JSON:
 { "input": { "arg_1": "value_1", ... } }`,
-  rules: `## Rules:
-
-- In case of final answer, provide a well formatted markdown string as the answer.
+  rules: `- In case of final answer, provide a well formatted markdown string as the answer.
+- When asked to describe the tools available to you or your capabilities, respond with a single paragraph summarizing the tools' capabilities.
 - In case of documents refered from vector search or results from a web search:
   Each retrieved document or search result is prefixed by a number in square brackets [1], [2], etc. When you write the final answer, cite sources inline using their numbers, like this: [1][3]. If multiple sources support the same fact, cite all of them.`,
+};
+
+/**
+ * Creates instructions for the LLM to follow
+ * @param prefix Prefix to add to the instructions
+ * @param tools Tools available to the LLM
+ * @returns Instructions for the LLM to follow
+ */
+export function createInstructions(prefix: string, tools: Tool[], options?: InstructionsOptions) {
+  prefix = prefix.replace("{maxSteps}", options?.maxSteps?.toString() || "4");
+  return `${prefix}\n\n## Tools:\n${describeAllTools(tools)}.`;
+}
+
+export const appInstructions = {
+  planner: `You are a helpful planner, tasked to plan a series of actions (maximum of {maxSteps} actions) to answer the user query. You can use the following tools:`,
+  plannerFinalAnswer: `The planner has decided to provide a final answer, post accessing the following tools available:`,
 };

@@ -1,10 +1,10 @@
 import { llm } from "../../llm";
 import { AgentContext, AgentResponse, CitationSource, ToolInput } from "../../types/agent";
-import { decribeTool, describeAllTools, toolRegistry, validateArgs } from "../registry";
+import { decribeTool, toolRegistry, validateArgs } from "../registry";
 import { startTrace, appendStep, endAndPersistTrace } from "../../utils/traceLogger";
 import { v4 as uuidv4 } from "uuid";
 import { LLMUsage, StreamHandler } from "../../llm/provider.types";
-import { appPrompts, createPrompt } from "../prompts";
+import { appInstructions, appPrompts, createInstructions, createPrompt } from "../prompts";
 import { appStrings } from "../../common/strings";
 import Logger from "../../utils/logger";
 
@@ -15,11 +15,12 @@ async function createPlan(
 ): Promise<{ actions: string[]; usage: LLMUsage | undefined }> {
   let prompt = createPrompt(userQuery, file);
 
+  const instructions = createInstructions(appInstructions.planner, toolRegistry.tools, {
+    maxSteps,
+  });
+
   prompt += `\n\n${appPrompts.toolPlanner}`;
   prompt += `\n\n${appPrompts.rules}`;
-
-  const instructions = `You are a helpful planner, tasked to plan a series of actions (maximum of ${maxSteps} actions) to answer the user query. You can use these tools:
-  ${describeAllTools(toolRegistry.tools)}.`;
 
   const response = await llm.generate(prompt, {
     temperature: 0.1,
@@ -71,8 +72,11 @@ export async function runPlannerAgent(
     for (const action of actions) {
       stepCount++;
       if (action === appStrings.agentFinalAnswerActionName) {
-        const prompt = createPrompt(userQuery, file, agentContext.steps);
-        const instructions = `The planner has decided to provide a final answer, post accessing the following tools available: ${describeAllTools(toolRegistry.tools)}`;
+        const prompt = createPrompt(userQuery, file, agentContext.steps, appPrompts.rules);
+        const instructions = createInstructions(
+          appInstructions.plannerFinalAnswer,
+          toolRegistry.tools
+        );
         await llm.stream(prompt, streamHandler, { instructions });
         const sortedSources = sources.sort((s_1, s_2) => s_1.id - s_2.id);
         streamHandler.onSources(sortedSources);
@@ -83,7 +87,7 @@ export async function runPlannerAgent(
       if (tool) {
         let args = {};
         if (tool.argsSchema) {
-          let prompt = createPrompt(userQuery, file, agentContext.steps);
+          let prompt = createPrompt(userQuery, file, agentContext.steps, appPrompts.rules);
           prompt += `\n\n${appPrompts.toolOrchestration}`;
           const instructions = `As part of the plan, you are asked to provide the arguments for the following tool: ${decribeTool(tool)}`;
           const response = await llm.generate(prompt, {
@@ -103,6 +107,11 @@ export async function runPlannerAgent(
         }
 
         validateArgs(tool, args);
+        streamHandler.onData({
+          data: tool.getLoadingMessage(args),
+          isInterstitialMessage: true,
+          done: false,
+        });
         const toolResult = await tool.execute({ ...args, sources });
 
         const toolSources = toolResult.sources || [];

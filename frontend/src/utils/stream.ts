@@ -4,7 +4,7 @@ import { StreamCallback } from "@/types/stream";
 export async function readResponseStream(
   messageId: string,
   response: Response,
-  callback: StreamCallback
+  callback: StreamCallback,
 ) {
   if (!response.ok || !response.body) {
     console.error("No response body for stream");
@@ -48,7 +48,7 @@ export async function readResponseStream(
           if (message.isInterstitialMessage) {
             callback.onInterstitialMessage(messageId, message.data);
           } else {
-            callback.onData(messageId, message.data, message.sources);
+            callback.onData(messageId, message.data);
           }
         } catch (err) {
           console.warn("Non-JSON chunk:", line);
