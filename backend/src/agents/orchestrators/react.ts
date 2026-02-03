@@ -1,10 +1,10 @@
 import { llm } from "../../llm";
 import { AgentAction, AgentContext, AgentResponse, CitationSource } from "../../types/agent";
-import { decribeTool, describeAllTools, toolRegistry, validateArgs } from "../registry";
+import { decribeTool, toolRegistry, validateArgs } from "../registry";
 import { startTrace, appendStep, endAndPersistTrace } from "../../utils/traceLogger";
 import { v4 as uuidv4 } from "uuid";
 import { LLMUsage, StreamHandler } from "../../llm/provider.types";
-import { appPrompts, createPrompt } from "../prompts";
+import { appPrompts, createInstructions, createPrompt } from "../prompts";
 import { appStrings } from "../../common/strings";
 
 export async function runReActAgent(
@@ -21,11 +21,13 @@ export async function runReActAgent(
   const usage: LLMUsage = { input_tokens: 0, output_tokens: 0 };
 
   for (let step = 0; step < maxSteps; step++) {
-    let prompt = createPrompt(userQuery, file, agentContext.steps);
+    let prompt = createPrompt(userQuery, file, agentContext.steps, appPrompts.rules);
     prompt += `\n\n${appPrompts.toolOrchestration}`;
-    prompt += `\n\n${appPrompts.rules}`;
 
-    const instructions = `You are a reasoning agent. You can use these tools:\n${describeAllTools(toolRegistry.tools)}. When asked to describe the tools available to you or your capabilities, respond with a single paragraph summarizing the tools' capabilities.`;
+    const instructions = createInstructions(
+      `You are a reasoning agent. You can use these tools:`,
+      toolRegistry.tools
+    );
 
     let decision;
 
